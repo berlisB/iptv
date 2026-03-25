@@ -48,6 +48,11 @@ class NavigatorBar extends StatelessWidget {
               selectedIcon: Icon(Icons.favorite, color: AppColor.primaryColor),
               label: 'Favoris',
             ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined, color: AppColor.textMuted),
+              selectedIcon: Icon(Icons.settings, color: AppColor.primaryColor),
+              label: 'Paramètres',
+            ),
           ],
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         ),

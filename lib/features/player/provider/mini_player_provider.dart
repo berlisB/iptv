@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 
 class MiniPlayerProvider extends ChangeNotifier {
@@ -260,11 +259,11 @@ class MiniPlayerProvider extends ChangeNotifier {
         _onConnectionTimeout();
       });
     } else {
-      debugPrint('[IPTV] All retries exhausted, adding to local blocklist');
+      debugPrint('[IPTV] All retries exhausted - keeping last player alive');
+      // Don't kill the player! It might still connect.
+      // Just stop the connection timer but keep _isBuffering true.
+      // The _widthSub will auto-dismiss the error if video arrives.
       _cancelTimers();
-      _isBuffering = false;
-      // Auto-add to local blocklist
-      AppStorage.addToBlocklist(_currentChannel!.url);
       _safeNotify();
     }
   }

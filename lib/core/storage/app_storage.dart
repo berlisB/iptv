@@ -134,4 +134,14 @@ class AppStorage {
   static double getVolume() {
     return _prefs.getDouble(_volumeKey) ?? 100.0;
   }
+
+  // Settings toggles
+  static bool getShowAdult() => _prefs.getBool('show_adult') ?? false;
+  static Future<void> setShowAdult(bool v) => _prefs.setBool('show_adult', v);
+
+  static bool getShowGeoBlocked() => _prefs.getBool('show_geo') ?? false;
+  static Future<void> setShowGeoBlocked(bool v) => _prefs.setBool('show_geo', v);
+
+  static bool getShowHidden() => _prefs.getBool('show_hidden') ?? false;
+  static Future<void> setShowHidden(bool v) => _prefs.setBool('show_hidden', v);
 }

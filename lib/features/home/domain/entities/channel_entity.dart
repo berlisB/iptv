@@ -47,6 +47,17 @@ class ChannelEntity extends Equatable {
 
   bool get isLivestream => mediaType == MediaType.livestream;
 
+  bool get isAdult {
+    final g = group.toLowerCase();
+    final n = name.toLowerCase();
+    return g.contains('xxx') ||
+        g.contains('adult') ||
+        g.contains('+18') ||
+        n.contains('xxx') ||
+        n.contains('adult') ||
+        n.contains('+18');
+  }
+
   /// Clean name without geo-blocked markers
   String get cleanName => name
       .replaceAll(RegExp(r'\[Geo-blocked\]', caseSensitive: false), '')

@@ -214,22 +214,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.signal_wifi_connected_no_internet_4_rounded,
-                  size: 64,
-                  color: AppColor.accentRed,
+                // Still trying indicator
+                const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CircularProgressIndicator(
+                    color: AppColor.accentOrange,
+                    strokeWidth: 3,
+                  ),
                 ),
                 const SizedBox(height: 20),
-                Text('Chaîne indisponible', style: AppTypography.heading3),
+                Text('Chaîne lente', style: AppTypography.heading3),
                 const SizedBox(height: 8),
                 Text(
-                  widget.channel.name,
+                  widget.channel.cleanName,
                   style: AppTypography.body1
                       .copyWith(color: AppColor.primaryLight),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '3 tentatives échouées.\nLe flux est probablement hors ligne ou géo-restreint.',
+                  'La connexion prend du temps.\nLe lecteur essaie toujours en arrière-plan...',
                   style: AppTypography.body2,
                   textAlign: TextAlign.center,
                 ),
@@ -239,7 +243,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => mp.retryChannel(),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Réessayer'),
+                    label: const Text('Relancer'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.primaryColor,
                       foregroundColor: Colors.white,

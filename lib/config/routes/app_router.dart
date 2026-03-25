@@ -5,6 +5,7 @@ import 'package:iptv/features/splash_screen/presentation/splash_screen.dart';
 import 'package:iptv/features/home/presentation/pages/home_screen.dart';
 import 'package:iptv/features/player/presentation/pages/player_screen.dart';
 import 'package:iptv/features/favorites/presentation/pages/favorites_screen.dart';
+import 'package:iptv/features/settings/presentation/pages/settings_screen.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/bottom_navigation_bar/presentation/navigator_bar.dart';
 
@@ -44,6 +45,15 @@ class AppRouter {
                 path: AppPage.favorites.path,
                 name: AppPage.favorites.name,
                 builder: (context, state) => const FavoritesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppPage.settings.path,
+                name: AppPage.settings.name,
+                builder: (context, state) => const SettingsScreen(),
               ),
             ],
           ),
