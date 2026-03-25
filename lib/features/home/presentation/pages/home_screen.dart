@@ -73,9 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Hidden channels menu
                   Consumer<HomeProvider>(
                     builder: (context, provider, _) {
-                      if (provider.hiddenCount == 0) {
-                        return const SizedBox.shrink();
-                      }
                       return PopupMenuButton<String>(
                         icon: const Icon(
                           Icons.more_vert,
@@ -87,49 +84,79 @@ class _HomeScreenState extends State<HomeScreen> {
                             provider.toggleShowHidden();
                           } else if (value == 'clear_hidden') {
                             provider.clearHiddenChannels();
+                          } else if (value == 'show_geo') {
+                            provider.toggleShowGeoBlocked();
                           }
                         },
                         itemBuilder: (_) => [
-                          PopupMenuItem(
-                            value: 'show_hidden',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  provider.showHidden
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: AppColor.textSecondary,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  provider.showHidden
-                                      ? 'Masquer les chaînes cachées'
-                                      : 'Afficher les chaînes cachées (${provider.hiddenCount})',
-                                  style: AppTypography.body2,
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'clear_hidden',
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.restore,
-                                  color: AppColor.accentOrange,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Restaurer toutes les chaînes',
-                                  style: AppTypography.body2.copyWith(
-                                    color: AppColor.accentOrange,
+                          if (provider.geoBlockedCount > 0)
+                            PopupMenuItem(
+                              value: 'show_geo',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    provider.showGeoBlocked
+                                        ? Icons.public_off
+                                        : Icons.public,
+                                    color: AppColor.accentBlue,
+                                    size: 20,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      provider.showGeoBlocked
+                                          ? 'Masquer géo-bloquées'
+                                          : 'Afficher géo-bloquées (${provider.geoBlockedCount})',
+                                      style: AppTypography.body2,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                          if (provider.hiddenCount > 0)
+                            PopupMenuItem(
+                              value: 'show_hidden',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    provider.showHidden
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: AppColor.textSecondary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      provider.showHidden
+                                          ? 'Masquer les chaînes cachées'
+                                          : 'Chaînes cachées (${provider.hiddenCount})',
+                                      style: AppTypography.body2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (provider.hiddenCount > 0)
+                            PopupMenuItem(
+                              value: 'clear_hidden',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.restore,
+                                    color: AppColor.accentOrange,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Restaurer toutes',
+                                    style: AppTypography.body2.copyWith(
+                                      color: AppColor.accentOrange,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       );
                     },
@@ -353,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      channel.name,
+                      channel.cleanName,
                       style: AppTypography.body2.copyWith(
                         color: AppColor.textPrimary,
                         fontWeight: FontWeight.w500,
@@ -366,6 +393,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        if (channel.isGeoBlocked)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.public_off,
+                              size: 14,
+                              color: AppColor.accentOrange,
+                            ),
+                          ),
                         Flexible(
                           child: Container(
                             padding: const EdgeInsets.symmetric(

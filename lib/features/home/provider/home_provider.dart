@@ -11,10 +11,14 @@ class HomeProvider extends ChangeNotifier {
   List<ChannelEntity> _recentChannels = [];
   List<ChannelEntity> _frequentChannels = [];
   List<ChannelGroup> _groups = [];
+  Set<String> _blocklist = {};
   String _selectedGroup = 'Tout';
   String _searchQuery = '';
   bool _isLoading = true;
   bool _showHidden = false;
+  bool _showGeoBlocked = false;
+  int _totalParsed = 0;
+  int _geoBlockedCount = 0;
 
   List<ChannelEntity> get allChannels => _allChannels;
   List<ChannelEntity> get filteredChannels => _filteredChannels;
@@ -25,28 +29,57 @@ class HomeProvider extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   bool get isLoading => _isLoading;
   bool get showHidden => _showHidden;
+  bool get showGeoBlocked => _showGeoBlocked;
+  int get geoBlockedCount => _geoBlockedCount;
 
   List<String> get groupNames {
-    final names = ['Tout', ..._groups.map((g) => g.name)];
-    return names;
+    return ['Tout', ..._groups.map((g) => g.name)];
   }
 
   Future<void> loadChannels() async {
     _isLoading = true;
     notifyListeners();
 
+    // Load blocklist (asset + local runtime detections)
+    _blocklist = await M3uDataSource.loadBlocklist();
+    _blocklist.addAll(AppStorage.getLocalBlocklist());
+
+    // Load playlists (remote iptv-org + local)
     final m3uContent = await M3uDataSource.loadAllPlaylists();
     final parsed = M3uParser.parse(m3uContent);
+    _totalParsed = parsed.length;
 
-    // Filter out non-streamable URLs
+    // Filter pipeline
     _allChannels = parsed.where((c) {
       final url = c.url.toLowerCase();
-      return !url.contains('youtube.com') &&
-          !url.contains('youtu.be') &&
-          !url.contains('twitch.tv') &&
-          !url.contains('dailymotion.com') &&
-          url.isNotEmpty;
+
+      // Non-streamable platforms
+      if (url.contains('youtube.com') ||
+          url.contains('youtu.be') ||
+          url.contains('twitch.tv') ||
+          url.contains('dailymotion.com')) {
+        return false;
+      }
+
+      // Empty URL
+      if (url.isEmpty) {
+        return false;
+      }
+
+      // Known broken URLs (blocklist)
+      if (_blocklist.contains(c.url)) {
+        return false;
+      }
+
+      return true;
     }).toList();
+
+    _geoBlockedCount = _allChannels.where((c) => c.isGeoBlocked).length;
+
+    debugPrint('[IPTV] Parsed: $_totalParsed, '
+        'after filters: ${_allChannels.length}, '
+        'geo-blocked: $_geoBlockedCount, '
+        'blocklisted: ${_blocklist.length}');
 
     // Deduplicate by name
     final seen = <String>{};
@@ -56,6 +89,8 @@ class HomeProvider extends ChangeNotifier {
       seen.add(key);
       return true;
     }).toList();
+
+    debugPrint('[IPTV] After dedup: ${_allChannels.length} channels');
 
     // Build groups
     final Map<String, List<ChannelEntity>> groupMap = {};
@@ -77,7 +112,6 @@ class HomeProvider extends ChangeNotifier {
   }
 
   void _loadRecentAndFrequent() {
-    // Recent
     final recentIds = AppStorage.getRecentChannels();
     _recentChannels = recentIds
         .map((id) {
@@ -91,7 +125,6 @@ class HomeProvider extends ChangeNotifier {
         .take(10)
         .toList();
 
-    // Frequent
     final frequentIds = AppStorage.getFrequentChannels(limit: 10);
     _frequentChannels = frequentIds
         .map((id) {
@@ -130,36 +163,44 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleShowGeoBlocked() {
+    _showGeoBlocked = !_showGeoBlocked;
+    _applyFilters();
+    notifyListeners();
+  }
+
   void _applyFilters() {
     var channels = List<ChannelEntity>.from(_allChannels);
 
-    // Filter hidden channels
+    // Filter hidden
     if (!_showHidden) {
       final hidden = AppStorage.getHiddenChannels();
       channels = channels.where((c) => !hidden.contains(c.id)).toList();
     }
 
-    // Filter by group
+    // Filter geo-blocked
+    if (!_showGeoBlocked) {
+      channels = channels.where((c) => !c.isGeoBlocked).toList();
+    }
+
     if (_selectedGroup != 'Tout') {
       channels = channels.where((c) => c.group == _selectedGroup).toList();
     }
 
-    // Filter by search
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       channels = channels
           .where((c) =>
               c.name.toLowerCase().contains(query) ||
-              c.group.toLowerCase().contains(query))
+              c.group.toLowerCase().contains(query) ||
+              c.country.toLowerCase().contains(query))
           .toList();
     }
 
     _filteredChannels = channels;
   }
 
-  bool isFavorite(String channelId) {
-    return AppStorage.isFavorite(channelId);
-  }
+  bool isFavorite(String channelId) => AppStorage.isFavorite(channelId);
 
   Future<void> toggleFavorite(String channelId) async {
     if (AppStorage.isFavorite(channelId)) {
@@ -170,9 +211,7 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isHidden(String channelId) {
-    return AppStorage.isHidden(channelId);
-  }
+  bool isHidden(String channelId) => AppStorage.isHidden(channelId);
 
   Future<void> hideChannel(String channelId) async {
     await AppStorage.hideChannel(channelId);

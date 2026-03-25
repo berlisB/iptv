@@ -36,24 +36,23 @@ class _MiniPlayerState extends State<MiniPlayer> {
           left: clampedX,
           top: clampedY,
           child: GestureDetector(
-            // Drag
-            onPanUpdate: (details) {
-              provider.updatePosition(details.delta);
-            },
-            // Tap to expand
             onTap: () {
               provider.expandFromMini();
               context.push(AppPage.player.path, extra: provider.currentChannel);
             },
-            // Pinch to resize
+            // Scale handles both drag (1 finger) and pinch-to-resize (2 fingers)
             onScaleStart: (_) {
               _baseScale = provider.miniSize.width;
             },
             onScaleUpdate: (details) {
               if (details.pointerCount >= 2) {
+                // Pinch to resize
                 final newWidth = _baseScale * details.scale;
                 final delta = newWidth - provider.miniSize.width;
                 provider.resizeMini(delta);
+              } else {
+                // Single finger drag
+                provider.updatePosition(details.focalPointDelta);
               }
             },
             child: Material(

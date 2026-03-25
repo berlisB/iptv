@@ -99,6 +99,31 @@ class AppStorage {
     return getHiddenChannels().contains(channelId);
   }
 
+  // Local blocklist (broken URLs detected at runtime)
+  static const String _localBlocklistKey = 'local_blocklist';
+
+  static Set<String> getLocalBlocklist() {
+    return (_prefs.getStringList(_localBlocklistKey) ?? []).toSet();
+  }
+
+  static Future<void> addToBlocklist(String url) async {
+    final list = _prefs.getStringList(_localBlocklistKey) ?? [];
+    if (!list.contains(url)) {
+      list.add(url);
+      await _prefs.setStringList(_localBlocklistKey, list);
+    }
+  }
+
+  static Future<void> removeFromBlocklist(String url) async {
+    final list = _prefs.getStringList(_localBlocklistKey) ?? [];
+    list.remove(url);
+    await _prefs.setStringList(_localBlocklistKey, list);
+  }
+
+  static Future<void> clearLocalBlocklist() async {
+    await _prefs.remove(_localBlocklistKey);
+  }
+
   // Volume
   static const String _volumeKey = 'volume';
 

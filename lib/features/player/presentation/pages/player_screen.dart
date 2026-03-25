@@ -74,25 +74,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   void _hideAndGoBack() {
     final homeProvider = context.read<HomeProvider>();
-    final messenger = ScaffoldMessenger.of(context);
-    final channelName = widget.channel.name;
-    final channelId = widget.channel.id;
-
-    homeProvider.hideChannel(channelId);
+    homeProvider.hideChannel(widget.channel.id);
     _miniProvider.stopAndClose();
     Navigator.of(context).pop();
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('$channelName masquée'),
-        backgroundColor: AppColor.surfaceColor,
-        action: SnackBarAction(
-          label: 'Annuler',
-          textColor: AppColor.primaryColor,
-          onPressed: () => homeProvider.unhideChannel(channelId),
-        ),
-      ),
-    );
   }
 
   void _goBackOrMinimize() {
