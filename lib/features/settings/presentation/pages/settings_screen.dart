@@ -5,7 +5,7 @@ import 'package:iptv/config/theme/typography/app_typography.dart';
 import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/provider/home_provider.dart';
 import 'package:iptv/features/home/presentation/widgets/category_bar.dart';
-import 'package:iptv/utils/country_names.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -69,6 +69,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
+            // --- Lecture ---
+            _buildSectionTitle('Lecture & Buffer'),
+            const SizedBox(height: 8),
+            _buildBufferSelector(),
+
+            const SizedBox(height: 24),
+
             // --- Filtres actifs ---
             _buildSectionTitle('Filtres de recherche'),
             const SizedBox(height: 8),
@@ -79,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Configurer les filtres',
               subtitle: hp.hasActiveFilters
                   ? '${hp.activeFilterCount} filtre(s) actif(s)'
-                  : 'Catégorie, pays, langue',
+                  : 'Choisir une catégorie',
               color: AppColor.primaryColor,
               onTap: () => FilterSheetHelper.show(context, hp),
             ),
@@ -186,13 +193,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         if (hp.selectedGroup != 'Tout')
           _buildChip(hp.selectedGroup, () => hp.selectGroup('Tout')),
-        for (final c in hp.selectedCountries)
-          _buildChip(
-            CountryNames.getFullName(c),
-            () => hp.toggleCountry(c),
-          ),
-        for (final l in hp.selectedLanguages)
-          _buildChip(l, () => hp.toggleLanguage(l)),
         // Clear all
         GestureDetector(
           onTap: () => hp.clearAllFilters(),
@@ -259,8 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _statRow('Total chaînes', '${hp.allChannels.length}'),
             _statRow('Affichées', '${hp.filteredChannels.length}'),
             _statRow('Catégories', '${hp.groups.length}'),
-            _statRow('Pays', '${hp.countryCounts.length}'),
-            _statRow('Langues', '${hp.languageCounts.length}'),
             _statRow('Géo-bloquées', '${hp.geoBlockedCount}'),
             _statRow('Masquées', '${hp.hiddenCount}'),
             _statRow('Blocklist locale', '${AppStorage.getLocalBlocklist().length}'),
@@ -280,6 +278,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(label, style: AppTypography.body2),
           Text(value, style: AppTypography.body2.copyWith(
             color: AppColor.primaryLight, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBufferSelector() {
+    final level = AppStorage.getBufferLevel();
+    const levels = [
+      ('Faible', 'Latence minimale, moins stable', Icons.speed),
+      ('Normal', '60s de cache, équilibré', Icons.tune),
+      ('Élevé', '3 min de pré-chargement, comme YouTube', Icons.download_for_offline),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColor.cardColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.cached_rounded, color: AppColor.primaryColor, size: 20),
+              const SizedBox(width: 8),
+              Text('Niveau de buffer', style: AppTypography.body1),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Un buffer élevé pré-charge le flux pour éviter les coupures',
+            style: AppTypography.caption,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: List.generate(3, (i) {
+              final selected = i == level;
+              final (name, subtitle, icon) = levels[i];
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    await AppStorage.setBufferLevel(i);
+                    setState(() {});
+                  },
+                  child: Container(
+                    margin: EdgeInsets.only(left: i > 0 ? 8 : 0),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppColor.primaryColor.withValues(alpha: 0.2)
+                          : AppColor.surfaceColor,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? AppColor.primaryColor : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(icon,
+                            color: selected ? AppColor.primaryColor : AppColor.textMuted,
+                            size: 22),
+                        const SizedBox(height: 4),
+                        Text(name,
+                            style: AppTypography.caption.copyWith(
+                              color: selected ? AppColor.primaryLight : AppColor.textSecondary,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                              fontSize: 12,
+                            )),
+                        const SizedBox(height: 2),
+                        Text(subtitle,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.caption.copyWith(fontSize: 9)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );

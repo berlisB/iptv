@@ -224,7 +224,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text('Chaîne lente', style: AppTypography.heading3),
+                Text('Chaîne inaccessible', style: AppTypography.heading3),
                 const SizedBox(height: 8),
                 Text(
                   widget.channel.cleanName,
@@ -233,7 +233,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'La connexion prend du temps.\nLe lecteur essaie toujours en arrière-plan...',
+                  'Aucune donnée reçue du serveur.\nL\'URL est peut-être hors ligne.',
                   style: AppTypography.body2,
                   textAlign: TextAlign.center,
                 ),

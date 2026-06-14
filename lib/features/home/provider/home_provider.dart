@@ -6,6 +6,121 @@ import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/home/domain/entities/channel_group.dart';
 
 class HomeProvider extends ChangeNotifier {
+  // --- Category normalization: merge fragmented groups into broad categories ---
+  static const Map<String, String> _categoryMap = {
+    // Actualités
+    'news': 'Actualités', 'information': 'Actualités', 'noticias': 'Actualités',
+    'nachrichten': 'Actualités', 'weather': 'Actualités', 'météo': 'Actualités',
+    // Sport
+    'sports': 'Sport', 'sport': 'Sport', 'deportes': 'Sport', 'football': 'Sport',
+    // Films & Séries
+    'movies': 'Films & Séries', 'cinema': 'Films & Séries',
+    'films': 'Films & Séries', 'series': 'Films & Séries',
+    'drama': 'Films & Séries', 'thriller': 'Films & Séries',
+    'action': 'Films & Séries', 'horror': 'Films & Séries',
+    'romance': 'Films & Séries', 'crime': 'Films & Séries',
+    'mystery': 'Films & Séries', 'sci-fi': 'Films & Séries',
+    'western': 'Films & Séries', 'war': 'Films & Séries',
+    // Divertissement
+    'entertainment': 'Divertissement', 'general': 'Divertissement',
+    'variety': 'Divertissement', 'comedy': 'Divertissement',
+    'reality': 'Divertissement', 'game': 'Divertissement',
+    'talk': 'Divertissement', 'classic': 'Divertissement',
+    // Enfants
+    'kids': 'Enfants', 'children': 'Enfants', 'animation': 'Enfants',
+    'cartoon': 'Enfants', 'family': 'Enfants', 'enfant': 'Enfants',
+    'jeunesse': 'Enfants',
+    // Musique
+    'music': 'Musique', 'musique': 'Musique',
+    // Documentaires
+    'documentary': 'Documentaires', 'science': 'Documentaires',
+    'nature': 'Documentaires', 'history': 'Documentaires',
+    'education': 'Documentaires', 'culture': 'Documentaires',
+    'discovery': 'Documentaires',
+    // Lifestyle
+    'lifestyle': 'Lifestyle', 'cooking': 'Lifestyle', 'food': 'Lifestyle',
+    'travel': 'Lifestyle', 'fashion': 'Lifestyle', 'home': 'Lifestyle',
+    'garden': 'Lifestyle', 'diy': 'Lifestyle', 'health': 'Lifestyle',
+    'wellness': 'Lifestyle', 'outdoor': 'Lifestyle', 'adventure': 'Lifestyle',
+    'relax': 'Lifestyle',
+    // Business
+    'business': 'Business', 'finance': 'Business',
+    // Religion
+    'religious': 'Religion', 'religion': 'Religion', 'spiritual': 'Religion',
+    // Shopping
+    'shop': 'Shopping', 'shopping': 'Shopping',
+    // Auto & Tech
+    'auto': 'Auto & Tech', 'automotive': 'Auto & Tech', 'technology': 'Auto & Tech',
+    // Politique
+    'legislative': 'Politique', 'political': 'Politique',
+    // Adulte
+    'xxx': 'Adulte 🔞', 'adult': 'Adulte 🔞', '+18': 'Adulte 🔞',
+    'porn': 'Adulte 🔞',
+  };
+
+  // Known country names (used as group-title by many sources)
+  static final _countryNames = <String>{
+    // English
+    'afghanistan', 'albania', 'algeria', 'andorra', 'angola', 'argentina',
+    'armenia', 'australia', 'austria', 'azerbaijan', 'bahrain', 'bangladesh',
+    'belarus', 'belgium', 'benin', 'bolivia', 'bosnia and herzegovina',
+    'brazil', 'brunei', 'bulgaria', 'burkina faso', 'burundi', 'cambodia',
+    'cameroon', 'canada', 'chad', 'chile', 'china', 'colombia', 'congo',
+    'costa rica', 'croatia', 'cuba', 'cyprus', 'czech republic', 'czechia',
+    'denmark', 'dominican republic', 'ecuador', 'egypt', 'el salvador',
+    'estonia', 'ethiopia', 'finland', 'france', 'gabon', 'georgia',
+    'germany', 'ghana', 'greece', 'guatemala', 'guinea', 'haiti',
+    'honduras', 'hong kong', 'hungary', 'iceland', 'india', 'indonesia',
+    'iran', 'iraq', 'ireland', 'israel', 'italy', 'ivory coast', 'jamaica',
+    'japan', 'jordan', 'kazakhstan', 'kenya', 'kosovo', 'kuwait',
+    'kyrgyzstan', 'laos', 'latvia', 'lebanon', 'libya', 'liechtenstein',
+    'lithuania', 'luxembourg', 'macedonia', 'madagascar', 'malaysia',
+    'mali', 'malta', 'mexico', 'moldova', 'monaco', 'mongolia',
+    'montenegro', 'morocco', 'mozambique', 'myanmar', 'nepal',
+    'netherlands', 'new zealand', 'nicaragua', 'niger', 'nigeria', 'norway',
+    'oman', 'pakistan', 'palestine', 'panama', 'paraguay', 'peru',
+    'philippines', 'poland', 'portugal', 'qatar', 'romania', 'russia',
+    'rwanda', 'saudi arabia', 'senegal', 'serbia', 'singapore', 'slovakia',
+    'slovenia', 'somalia', 'south africa', 'south korea', 'spain',
+    'sri lanka', 'sudan', 'sweden', 'switzerland', 'syria', 'taiwan',
+    'tajikistan', 'tanzania', 'thailand', 'togo', 'trinidad and tobago',
+    'tunisia', 'turkey', 'turkmenistan', 'uganda', 'ukraine',
+    'united arab emirates', 'united kingdom', 'united states',
+    'united states of america', 'uruguay', 'uzbekistan', 'venezuela',
+    'vietnam', 'yemen', 'zambia', 'zimbabwe',
+    // French
+    'algérie', 'allemagne', 'arabie saoudite', 'belgique', 'brésil',
+    'cameroun', 'côte d\'ivoire', 'danemark', 'espagne', 'états-unis',
+    'grèce', 'hongrie', 'inde', 'irlande', 'islande', 'italie', 'japon',
+    'liban', 'libye', 'maroc', 'mexique', 'norvège', 'nouvelle-zélande',
+    'pays-bas', 'pologne', 'république dominicaine', 'république tchèque',
+    'roumanie', 'royaume-uni', 'russie', 'sénégal', 'suède', 'suisse',
+    'thaïlande', 'tunisie', 'turquie',
+    // Common abbreviations used as groups
+    'usa', 'uk', 'uae', 'drc',
+  };
+
+  static String _normalizeGroup(String rawGroup, {bool isAdult = false}) {
+    if (rawGroup.isEmpty) return 'Autres';
+    if (isAdult) return 'Adulte 🔞';
+
+    final lower = rawGroup.toLowerCase().trim();
+    if (lower == 'undefined' || lower == 'autres' || lower == 'uncategorized'
+        || lower == 'other' || lower == 'misc') {
+      return 'Autres';
+    }
+    // Check if it's a country name → put in Général
+    if (_countryNames.contains(lower)) return 'Général';
+    // Exact match
+    if (_categoryMap.containsKey(lower)) return _categoryMap[lower]!;
+    // Contains match
+    for (final entry in _categoryMap.entries) {
+      if (lower.contains(entry.key)) return entry.value;
+    }
+    return rawGroup;
+  }
+
+  // --- State ---
   List<ChannelEntity> _allChannels = [];
   List<ChannelEntity> _filteredChannels = [];
   List<ChannelEntity> _recentChannels = [];
@@ -13,10 +128,10 @@ class HomeProvider extends ChangeNotifier {
   List<ChannelGroup> _groups = [];
   Set<String> _blocklist = {};
 
-  // Filter state
+  /// Maps original group name → normalized category for each channel
+  final Map<String, String> _normalizedGroups = {};
+
   String _selectedGroup = 'Tout';
-  final Set<String> _selectedCountries = {};
-  final Set<String> _selectedLanguages = {};
   String _searchQuery = '';
   bool _isLoading = true;
   bool _showHidden = false;
@@ -24,36 +139,27 @@ class HomeProvider extends ChangeNotifier {
   bool _showUndefined = true;
   int _geoBlockedCount = 0;
 
-  // Available filter options (built from data)
-  Map<String, int> _countryCounts = {};
-  Map<String, int> _languageCounts = {};
-
   List<ChannelEntity> get allChannels => _allChannels;
   List<ChannelEntity> get filteredChannels => _filteredChannels;
   List<ChannelEntity> get recentChannels => _recentChannels;
   List<ChannelEntity> get frequentChannels => _frequentChannels;
   List<ChannelGroup> get groups => _groups;
   String get selectedGroup => _selectedGroup;
-  Set<String> get selectedCountries => _selectedCountries;
-  Set<String> get selectedLanguages => _selectedLanguages;
   String get searchQuery => _searchQuery;
   bool get isLoading => _isLoading;
   bool get showHidden => _showHidden;
   bool get showGeoBlocked => _showGeoBlocked;
   bool get showUndefined => _showUndefined;
   int get geoBlockedCount => _geoBlockedCount;
-  Map<String, int> get countryCounts => _countryCounts;
-  Map<String, int> get languageCounts => _languageCounts;
 
-  bool get hasActiveFilters =>
-      _selectedGroup != 'Tout' ||
-      _selectedCountries.isNotEmpty ||
-      _selectedLanguages.isNotEmpty;
+  bool get hasActiveFilters => _selectedGroup != 'Tout';
+  int get activeFilterCount => _selectedGroup != 'Tout' ? 1 : 0;
 
-  int get activeFilterCount =>
-      (_selectedGroup != 'Tout' ? 1 : 0) +
-      _selectedCountries.length +
-      _selectedLanguages.length;
+  /// Get normalized category for a channel
+  String categoryOf(ChannelEntity c) {
+    final key = '${c.group}|${c.isAdult}';
+    return _normalizedGroups[key] ?? _normalizeGroup(c.group, isAdult: c.isAdult);
+  }
 
   List<String> get groupNames {
     return ['Tout', ..._groups.map((g) => g.name)];
@@ -82,12 +188,8 @@ class HomeProvider extends ChangeNotifier {
           url.contains('dailymotion.com')) {
         return false;
       }
-      if (url.isEmpty) {
-        return false;
-      }
-      if (_blocklist.contains(c.url)) {
-        return false;
-      }
+      if (url.isEmpty) return false;
+      if (_blocklist.contains(c.url)) return false;
       return true;
     }).toList();
 
@@ -101,46 +203,35 @@ class HomeProvider extends ChangeNotifier {
     final seen = <String>{};
     _allChannels = _allChannels.where((c) {
       final key = c.name.toLowerCase().trim();
-      if (seen.contains(key)) {
-        return false;
-      }
+      if (seen.contains(key)) return false;
       seen.add(key);
       return true;
     }).toList();
 
     debugPrint('[IPTV] After dedup: ${_allChannels.length} channels');
 
-    // Build groups
+    // Build normalized group mapping (per-channel because isAdult depends on name)
+    _normalizedGroups.clear();
+    for (final c in _allChannels) {
+      final key = '${c.group}|${c.isAdult}';
+      if (!_normalizedGroups.containsKey(key)) {
+        _normalizedGroups[key] = _normalizeGroup(c.group, isAdult: c.isAdult);
+      }
+    }
+
+    // Build groups using normalized categories
     final Map<String, List<ChannelEntity>> groupMap = {};
     for (final channel in _allChannels) {
-      groupMap.putIfAbsent(channel.group, () => []);
-      groupMap[channel.group]!.add(channel);
+      final cat = categoryOf(channel);
+      groupMap.putIfAbsent(cat, () => []).add(channel);
     }
     _groups = groupMap.entries
         .map((e) => ChannelGroup(name: e.key, channels: e.value))
-        .where((g) {
-          // Hide adult groups from the list unless enabled
-          final n = g.name.toLowerCase();
-          if (n.contains('xxx') || n.contains('adult') || n.contains('+18')) {
-            return false;
-          }
-          return true;
-        })
         .toList()
-      // Sort by channel count (most popular first)
       ..sort((a, b) => b.count.compareTo(a.count));
 
-    // Build country and language counts
-    _countryCounts = {};
-    _languageCounts = {};
-    for (final c in _allChannels) {
-      if (c.country.isNotEmpty) {
-        _countryCounts[c.country] = (_countryCounts[c.country] ?? 0) + 1;
-      }
-      if (c.language.isNotEmpty) {
-        _languageCounts[c.language] = (_languageCounts[c.language] ?? 0) + 1;
-      }
-    }
+    debugPrint('[IPTV] Categories: ${_groups.length} '
+        '(${_groups.take(5).map((g) => '${g.name}:${g.count}').join(', ')}, ...)');
 
     _loadRecentAndFrequent();
     _applyFilters();
@@ -191,30 +282,8 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleCountry(String country) {
-    if (_selectedCountries.contains(country)) {
-      _selectedCountries.remove(country);
-    } else {
-      _selectedCountries.add(country);
-    }
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void toggleLanguage(String language) {
-    if (_selectedLanguages.contains(language)) {
-      _selectedLanguages.remove(language);
-    } else {
-      _selectedLanguages.add(language);
-    }
-    _applyFilters();
-    notifyListeners();
-  }
-
   void clearAllFilters() {
     _selectedGroup = 'Tout';
-    _selectedCountries.clear();
-    _selectedLanguages.clear();
     _searchQuery = '';
     _applyFilters();
     notifyListeners();
@@ -254,7 +323,6 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Called from settings to refresh filters
   void refreshFilters() {
     _showHidden = AppStorage.getShowHidden();
     _showGeoBlocked = AppStorage.getShowGeoBlocked();
@@ -264,6 +332,12 @@ class HomeProvider extends ChangeNotifier {
 
   void _applyFilters() {
     var channels = List<ChannelEntity>.from(_allChannels);
+
+    // Confirmed (reliable) channels: hide from main list
+    final confirmed = AppStorage.getConfirmedChannels();
+    if (confirmed.isNotEmpty) {
+      channels = channels.where((c) => !confirmed.contains(c.id)).toList();
+    }
 
     // Hidden
     if (!_showHidden) {
@@ -284,28 +358,14 @@ class HomeProvider extends ChangeNotifier {
     // Undefined/unclassified channels
     if (!_showUndefined) {
       channels = channels.where((c) {
-        final g = c.group.toLowerCase();
-        return g != 'undefined' && g != 'autres' && g.isNotEmpty;
+        final cat = categoryOf(c);
+        return cat != 'Autres';
       }).toList();
     }
 
-    // Group/category
+    // Group/category (using normalized categories)
     if (_selectedGroup != 'Tout') {
-      channels = channels.where((c) => c.group == _selectedGroup).toList();
-    }
-
-    // Countries (multi-select OR)
-    if (_selectedCountries.isNotEmpty) {
-      channels = channels
-          .where((c) => _selectedCountries.contains(c.country))
-          .toList();
-    }
-
-    // Languages (multi-select OR)
-    if (_selectedLanguages.isNotEmpty) {
-      channels = channels
-          .where((c) => _selectedLanguages.contains(c.language))
-          .toList();
+      channels = channels.where((c) => categoryOf(c) == _selectedGroup).toList();
     }
 
     // Search
@@ -314,9 +374,8 @@ class HomeProvider extends ChangeNotifier {
       channels = channels
           .where((c) =>
               c.name.toLowerCase().contains(query) ||
-              c.group.toLowerCase().contains(query) ||
-              c.country.toLowerCase().contains(query) ||
-              c.language.toLowerCase().contains(query))
+              categoryOf(c).toLowerCase().contains(query) ||
+              c.country.toLowerCase().contains(query))
           .toList();
     }
 

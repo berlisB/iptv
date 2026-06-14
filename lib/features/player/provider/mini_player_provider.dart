@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 
 class MiniPlayerProvider extends ChangeNotifier {
@@ -14,7 +15,6 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool _isBuffering = false;
   bool _hasEverPlayed = false;
   bool _disposed = false;
-  int _retryCount = 0;
   int _connectionSeconds = 0;
   Offset _position = const Offset(16, 100);
   Size _miniSize = const Size(180, 110);
@@ -22,10 +22,18 @@ class MiniPlayerProvider extends ChangeNotifier {
   StreamSubscription? _bufferSub;
   StreamSubscription? _widthSub;
   Timer? _connectionTimer;
-  Timer? _timeoutTimer;
+  Timer? _deadTimer;
+  Timer? _confirmTimer;
 
-  static const int _maxRetries = 2;
-  static const int _timeoutSeconds = 10;
+  /// Has mpv established a connection and started receiving data?
+  bool _hasConnected = false;
+
+  /// Smooth playback tracking: counts continuous seconds without buffering
+  bool _confirmedThisSession = false;
+
+  /// Dead URL timeout: if mpv hasn't connected at all after this, URL is truly dead.
+  /// Adapts to buffer level: low=12s, normal=18s, high=30s
+  static const _deadTimeoutByLevel = [12, 18, 30];
 
   static const _pipChannel = MethodChannel('com.example.iptv/pip');
 
@@ -38,24 +46,37 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool get hasActivePlayer => _player != null && _currentChannel != null;
   Offset get position => _position;
   Size get miniSize => _miniSize;
-  int get retryCount => _retryCount;
   int get connectionSeconds => _connectionSeconds;
-  bool get isRetrying => _retryCount > 0 && !_hasEverPlayed;
+  bool get hasEverPlayed => _hasEverPlayed;
+
+  /// True when URL appears dead (no connection at all after timeout)
+  bool get isUrlDead => !_hasConnected && !_hasEverPlayed && _connectionSeconds > _deadTimeout;
+
+  int get _deadTimeout => _deadTimeoutByLevel[AppStorage.getBufferLevel().clamp(0, 2)];
+
   String get connectionStatus {
     if (_hasEverPlayed) return '';
-    if (_retryCount > 0) return 'Tentative $_retryCount/$_maxRetries...';
+    if (isUrlDead) return '';
+    if (_hasConnected) return 'Chargement du flux... ${_connectionSeconds}s';
     if (_connectionSeconds > 3) return 'Connexion... ${_connectionSeconds}s';
     return '';
   }
 
-  bool get hasExhaustedRetries =>
-      _retryCount > _maxRetries && !_hasEverPlayed;
-
-  bool get hasEverPlayed => _hasEverPlayed;
+  // Legacy getters for UI compatibility
+  int get retryCount => 0;
+  bool get isRetrying => false;
+  bool get hasExhaustedRetries => isUrlDead;
 
   void _safeNotify() {
     if (!_disposed) notifyListeners();
   }
+
+  /// Buffer presets: [bufferSize MB, cacheSecs, readaheadSecs, pauseWait secs]
+  static const _bufferPresets = [
+    [32, 15, 10, 1],   // 0 = Faible (low latency, less stable)
+    [64, 60, 30, 3],   // 1 = Normal (balanced)
+    [150, 180, 90, 5], // 2 = Élevé (YouTube-like, pre-buffers heavily)
+  ];
 
   void _createPlayer() {
     _playingSub?.cancel();
@@ -63,9 +84,12 @@ class MiniPlayerProvider extends ChangeNotifier {
     _widthSub?.cancel();
     _player?.dispose();
 
+    final level = AppStorage.getBufferLevel().clamp(0, 2);
+    final preset = _bufferPresets[level];
+
     _player = Player(
-      configuration: const PlayerConfiguration(
-        bufferSize: 64 * 1024 * 1024,
+      configuration: PlayerConfiguration(
+        bufferSize: preset[0] * 1024 * 1024,
         logLevel: MPVLogLevel.warn,
       ),
     );
@@ -81,6 +105,34 @@ class MiniPlayerProvider extends ChangeNotifier {
     _bufferSub = _player!.stream.buffering.listen((buffering) {
       if (_disposed) return;
       _isBuffering = buffering;
+
+      // Key insight: if mpv fires buffering=true, it means it HAS connected
+      // to the server and is downloading data. Cancel the dead-URL timer.
+      if (buffering && !_hasConnected) {
+        _hasConnected = true;
+        _deadTimer?.cancel();
+        _deadTimer = null;
+        debugPrint('[IPTV] Connection established - downloading data, '
+            'waiting for buffer to fill...');
+      }
+
+      // Smooth playback detection for auto-confirm:
+      // When buffering stops (= playing smoothly), start a 30s timer.
+      // If buffering resumes before 30s, cancel it.
+      if (_hasEverPlayed && !_confirmedThisSession) {
+        if (!buffering) {
+          // Playing smoothly — start confirm countdown
+          _confirmTimer?.cancel();
+          _confirmTimer = Timer(const Duration(seconds: 30), () {
+            _autoConfirmChannel();
+          });
+        } else {
+          // Buffering again — reset countdown
+          _confirmTimer?.cancel();
+          _confirmTimer = null;
+        }
+      }
+
       _safeNotify();
     });
 
@@ -89,6 +141,7 @@ class MiniPlayerProvider extends ChangeNotifier {
       if (width != null && width > 0) {
         debugPrint('[IPTV] Got video frames: ${width}px wide');
         _hasEverPlayed = true;
+        _hasConnected = true;
         _cancelTimers();
         _safeNotify();
       }
@@ -105,18 +158,31 @@ class MiniPlayerProvider extends ChangeNotifier {
 
       final nativePlayer = platform as dynamic;
 
-      // --- Streaming performance ---
+      // --- Streaming performance (adaptive buffer) ---
+      final level = AppStorage.getBufferLevel().clamp(0, 2);
+      final preset = _bufferPresets[level];
+      final cacheSecs = preset[1];
+      final readaheadSecs = preset[2];
+      final pauseWait = preset[3];
+
       await nativePlayer.setProperty('cache', 'yes');
-      await nativePlayer.setProperty('cache-secs', '30');
-      await nativePlayer.setProperty('demuxer-max-bytes', '64MiB');
-      await nativePlayer.setProperty('demuxer-max-back-bytes', '32MiB');
-      await nativePlayer.setProperty('demuxer-readahead-secs', '20');
+      await nativePlayer.setProperty('cache-secs', '$cacheSecs');
+      await nativePlayer.setProperty('demuxer-max-bytes', '${preset[0]}MiB');
+      await nativePlayer.setProperty('demuxer-max-back-bytes', '${preset[0] ~/ 2}MiB');
+      await nativePlayer.setProperty('demuxer-readahead-secs', '$readaheadSecs');
+
+      // --- Cache-pause: pause briefly to fill buffer, then play smoothly ---
+      // This is the "YouTube" behavior: buffer first, play without interruption
+      await nativePlayer.setProperty('cache-pause', 'yes');
+      await nativePlayer.setProperty('cache-pause-initial', 'yes');
+      await nativePlayer.setProperty('cache-pause-wait', '$pauseWait');
 
       // --- Network resilience ---
-      await nativePlayer.setProperty('network-timeout', '15');
+      // Long network timeout for slow connections
+      await nativePlayer.setProperty('network-timeout', '30');
       await nativePlayer.setProperty(
         'stream-lavf-o',
-        'reconnect=1,reconnect_streamed=1,reconnect_delay_max=5,reconnect_on_network_error=1',
+        'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10,reconnect_on_network_error=1',
       );
 
       // --- Hardware decoding ---
@@ -163,14 +229,34 @@ class MiniPlayerProvider extends ChangeNotifier {
         await nativePlayer.setProperty('tls-verify', 'no');
       }
 
-      debugPrint('[IPTV] mpv configured: cache=yes, hwdec=auto, '
-          'prefetch=${channel.isLivestream}, '
-          'headers=${channel.httpHeaders.hasHeaders}');
+      final levelNames = ['Faible', 'Normal', 'Élevé'];
+      debugPrint('[IPTV] mpv configured: buffer=${levelNames[level]}, '
+          'cache=${cacheSecs}s, readahead=${readaheadSecs}s, '
+          'pause-wait=${pauseWait}s, hwdec=auto, '
+          'prefetch=${channel.isLivestream}');
     } on AssertionError catch (_) {
       // Player was disposed between create and configure - ignore
     } catch (e) {
       debugPrint('[IPTV] mpv config error (non-fatal): $e');
     }
+  }
+
+  void _autoConfirmChannel() {
+    if (_disposed || _currentChannel == null || _confirmedThisSession) return;
+    _confirmedThisSession = true;
+    AppStorage.confirmChannel(_currentChannel!.id);
+    debugPrint('[IPTV] Channel auto-confirmed as reliable: '
+        '${_currentChannel!.name}');
+  }
+
+  Map<String, String>? _buildHeaders(ChannelEntity channel) {
+    if (!channel.httpHeaders.hasHeaders) return null;
+    return {
+      if (channel.httpHeaders.referrer != null)
+        'Referer': channel.httpHeaders.referrer!,
+      if (channel.httpHeaders.httpOrigin != null)
+        'Origin': channel.httpHeaders.httpOrigin!,
+    };
   }
 
   Future<void> playChannel(ChannelEntity channel) async {
@@ -181,7 +267,8 @@ class MiniPlayerProvider extends ChangeNotifier {
     _currentChannel = channel;
     _isMiniMode = false;
     _hasEverPlayed = false;
-    _retryCount = 0;
+    _hasConnected = false;
+    _confirmedThisSession = false;
     _connectionSeconds = 0;
     _isBuffering = true;
 
@@ -193,93 +280,58 @@ class MiniPlayerProvider extends ChangeNotifier {
 
     _startConnectionTracking();
 
-    // Pass HTTP headers via Media if available
-    final Map<String, String>? mediaHeaders =
-        channel.httpHeaders.hasHeaders
-            ? {
-                if (channel.httpHeaders.referrer != null)
-                  'Referer': channel.httpHeaders.referrer!,
-                if (channel.httpHeaders.httpOrigin != null)
-                  'Origin': channel.httpHeaders.httpOrigin!,
-              }
-            : null;
-
-    _player!.open(Media(
-      channel.url,
-      httpHeaders: mediaHeaders,
-    ));
+    // Fire-and-forget: don't await, let mpv connect in background
+    _player!.open(Media(channel.url, httpHeaders: _buildHeaders(channel)));
   }
 
   void _startConnectionTracking() {
     _cancelTimers();
 
+    // Connection counter (for UI display)
     _connectionTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_disposed || _hasEverPlayed) {
         _cancelTimers();
         return;
       }
       _connectionSeconds++;
-      debugPrint(
-          '[IPTV] Connecting... ${_connectionSeconds}s (retry: $_retryCount)');
+
+      if (_hasConnected) {
+        debugPrint('[IPTV] Buffering... ${_connectionSeconds}s '
+            '(connected, filling cache)');
+      } else {
+        debugPrint('[IPTV] Connecting... ${_connectionSeconds}s');
+      }
       _safeNotify();
     });
 
-    _timeoutTimer = Timer(Duration(seconds: _timeoutSeconds), () {
-      debugPrint('[IPTV] Timeout after ${_timeoutSeconds}s');
-      _onConnectionTimeout();
+    // Dead-URL timer: only fires if mpv NEVER establishes a connection.
+    // If mpv starts buffering (= connected), this timer is cancelled.
+    final timeout = _deadTimeout;
+    _deadTimer = Timer(Duration(seconds: timeout), () {
+      if (_disposed || _hasEverPlayed || _hasConnected) return;
+      debugPrint('[IPTV] URL appears dead after ${timeout}s '
+          '(no connection established)');
+      // Don't kill the player - it might still connect.
+      // Just notify UI so it can show an option to retry or go back.
+      _safeNotify();
     });
-  }
-
-  void _onConnectionTimeout() {
-    if (_disposed || _hasEverPlayed || _currentChannel == null) return;
-
-    _retryCount++;
-    debugPrint('[IPTV] Retry $_retryCount/$_maxRetries');
-
-    if (_retryCount <= _maxRetries) {
-      _connectionSeconds = 0;
-      _safeNotify();
-
-      _createPlayer();
-      _configureMpvForChannel(_currentChannel!);
-      _player!.open(Media(
-        _currentChannel!.url,
-        httpHeaders: _currentChannel!.httpHeaders.hasHeaders
-            ? {
-                if (_currentChannel!.httpHeaders.referrer != null)
-                  'Referer': _currentChannel!.httpHeaders.referrer!,
-                if (_currentChannel!.httpHeaders.httpOrigin != null)
-                  'Origin': _currentChannel!.httpHeaders.httpOrigin!,
-              }
-            : null,
-      ));
-
-      _timeoutTimer?.cancel();
-      _timeoutTimer = Timer(Duration(seconds: _timeoutSeconds), () {
-        _onConnectionTimeout();
-      });
-    } else {
-      debugPrint('[IPTV] All retries exhausted - keeping last player alive');
-      // Don't kill the player! It might still connect.
-      // Just stop the connection timer but keep _isBuffering true.
-      // The _widthSub will auto-dismiss the error if video arrives.
-      _cancelTimers();
-      _safeNotify();
-    }
   }
 
   void _cancelTimers() {
     _connectionTimer?.cancel();
-    _timeoutTimer?.cancel();
+    _deadTimer?.cancel();
+    _confirmTimer?.cancel();
     _connectionTimer = null;
-    _timeoutTimer = null;
+    _deadTimer = null;
+    _confirmTimer = null;
   }
 
   Future<void> retryChannel() async {
     if (_disposed || _currentChannel == null) return;
-    _retryCount = 0;
     _connectionSeconds = 0;
     _hasEverPlayed = false;
+    _hasConnected = false;
+    _confirmedThisSession = false;
     _isBuffering = true;
 
     _createPlayer();
@@ -289,14 +341,7 @@ class MiniPlayerProvider extends ChangeNotifier {
     _startConnectionTracking();
     _player!.open(Media(
       _currentChannel!.url,
-      httpHeaders: _currentChannel!.httpHeaders.hasHeaders
-          ? {
-              if (_currentChannel!.httpHeaders.referrer != null)
-                'Referer': _currentChannel!.httpHeaders.referrer!,
-              if (_currentChannel!.httpHeaders.httpOrigin != null)
-                'Origin': _currentChannel!.httpHeaders.httpOrigin!,
-            }
-          : null,
+      httpHeaders: _buildHeaders(_currentChannel!),
     ));
   }
 
@@ -344,7 +389,8 @@ class MiniPlayerProvider extends ChangeNotifier {
     _isMiniMode = false;
     _currentChannel = null;
     _hasEverPlayed = false;
-    _retryCount = 0;
+    _hasConnected = false;
+    _confirmedThisSession = false;
     _connectionSeconds = 0;
     _isBuffering = false;
     try {

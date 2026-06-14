@@ -144,4 +144,38 @@ class AppStorage {
 
   static bool getShowHidden() => _prefs.getBool('show_hidden') ?? false;
   static Future<void> setShowHidden(bool v) => _prefs.setBool('show_hidden', v);
+
+  // Buffer level: 0=low, 1=normal (default), 2=high
+  static const String _bufferLevelKey = 'buffer_level';
+  static int getBufferLevel() => _prefs.getInt(_bufferLevelKey) ?? 1;
+  static Future<void> setBufferLevel(int v) => _prefs.setInt(_bufferLevelKey, v);
+
+  // Confirmed (reliable) channels
+  static const String _confirmedKey = 'confirmed_channels';
+
+  static Set<String> getConfirmedChannels() {
+    return (_prefs.getStringList(_confirmedKey) ?? []).toSet();
+  }
+
+  static bool isConfirmed(String channelId) {
+    return getConfirmedChannels().contains(channelId);
+  }
+
+  static Future<void> confirmChannel(String channelId) async {
+    final list = _prefs.getStringList(_confirmedKey) ?? [];
+    if (!list.contains(channelId)) {
+      list.add(channelId);
+      await _prefs.setStringList(_confirmedKey, list);
+    }
+  }
+
+  static Future<void> unconfirmChannel(String channelId) async {
+    final list = _prefs.getStringList(_confirmedKey) ?? [];
+    list.remove(channelId);
+    await _prefs.setStringList(_confirmedKey, list);
+  }
+
+  static Future<void> clearConfirmedChannels() async {
+    await _prefs.remove(_confirmedKey);
+  }
 }

@@ -323,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              channel.group,
+                              provider.categoryOf(channel),
                               style: AppTypography.caption.copyWith(
                                 color: AppColor.primaryLight,
                                 fontSize: 10,

@@ -15,14 +15,33 @@ class M3uDataSource {
   static const String _masterIndex =
       'https://iptv-org.github.io/iptv/index.m3u';
 
-  // Free streaming services
+  // Free streaming services (FAST/AVOD)
+  // BuddyChewChew replaces old i.mjh.nz (DMCA'd by Warner Bros)
+  static const String _buddyBase =
+      'https://raw.githubusercontent.com/BuddyChewChew/app-m3u-generator/refs/heads/main/playlists';
+  static const String _apsattBase = 'https://www.apsattv.com';
+
   static const List<String> _freeServices = [
+    // Free-TV
     'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
-    'https://i.mjh.nz/PlutoTV/all.m3u8',
-    'https://i.mjh.nz/SamsungTVPlus/all.m3u8',
-    'https://i.mjh.nz/Plex/all.m3u8',
-    'https://i.mjh.nz/Roku/all.m3u8',
-    'https://i.mjh.nz/Tubi/all.m3u8',
+    // BuddyChewChew (Pluto, Samsung, Plex, Roku, Tubi)
+    '$_buddyBase/plutotv_all.m3u',
+    '$_buddyBase/samsungtvplus_all.m3u',
+    '$_buddyBase/plex_all.m3u',
+    '$_buddyBase/roku_all.m3u',
+    '$_buddyBase/tubi_all.m3u',
+    // Xumo
+    'https://raw.githubusercontent.com/BuddyChewChew/xumo-playlist-generator/refs/heads/main/playlists/xumo_playlist.m3u',
+    // apsattv.com FAST services
+    '$_apsattBase/distro.m3u',
+    '$_apsattBase/localnow.m3u',
+    '$_apsattBase/vidaa.m3u',
+    '$_apsattBase/vizio.m3u',
+    '$_apsattBase/tclplus.m3u',
+    // LG Channels France
+    '$_apsattBase/frlg.m3u',
+    // Freeview NZ/AU
+    'https://i.mjh.nz/all/raw-tv.m3u8',
   ];
 
   /// Fetch a single remote playlist
@@ -49,9 +68,12 @@ class M3uDataSource {
     return result ?? '';
   }
 
-  /// Fetch free streaming services in parallel
+  /// Fetch free streaming services in parallel (non-blocking)
   static Future<String> fetchFreeServices() async {
-    final futures = _freeServices.map((url) => _fetchPlaylist(url));
+    // Use individual timeouts per fetch (already 30s each in _fetchPlaylist).
+    // Don't let one slow source block others.
+    final futures = _freeServices.map((url) =>
+        _fetchPlaylist(url).catchError((_) => null as String?));
     final results = await Future.wait(futures);
     final loaded = results.where((r) => r != null).length;
     debugPrint('[IPTV] Free services: $loaded/${_freeServices.length} loaded');
@@ -73,7 +95,7 @@ class M3uDataSource {
       final results = await Future.wait([
         fetchMasterIndex(),
         fetchFreeServices(),
-      ]).timeout(const Duration(seconds: 45));
+      ]).timeout(const Duration(seconds: 60));
 
       for (final result in results) {
         if (result.length > 100) {
