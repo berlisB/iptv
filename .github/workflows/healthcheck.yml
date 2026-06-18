@@ -1,0 +1,54 @@
+name: IPTV health-check
+
+# Teste la connectivité réelle des flux légaux et publie verified.m3u.
+# L'app peut ensuite consommer une liste pré-filtrée des chaînes vivantes.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # toutes les 6 h
+  workflow_dispatch: # déclenchement manuel
+    inputs:
+      include_master:
+        description: "Tester aussi iptv-org index (~8000, lent)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: healthcheck
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install aiohttp
+
+      - name: Run health-check
+        env:
+          INCLUDE_MASTER: ${{ inputs.include_master && '1' || '' }}
+          CONCURRENCY: "80"
+          TIMEOUT: "8"
+        run: python tools/healthcheck.py
+
+      - name: Commit verified.m3u
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet verified.m3u; then
+            echo "Aucun changement dans verified.m3u"
+          else
+            git add verified.m3u
+            git commit -m "chore: refresh verified.m3u [skip ci]"
+            git push
+          fi

@@ -15,6 +15,12 @@ class M3uDataSource {
   static const String _masterIndex =
       'https://iptv-org.github.io/iptv/index.m3u';
 
+  // Liste pré-vérifiée VIVANTE, régénérée toutes les 6h par la GitHub Action
+  // tools/healthcheck.py (.github/workflows/healthcheck.yml). Sources 100%
+  // légales uniquement. Chargée en 1er = chaînes les + fiables.
+  static const String _verifiedIndex =
+      'https://raw.githubusercontent.com/berlisB/iptv/main/verified.m3u';
+
   // Free streaming services (FAST/AVOD)
   // BuddyChewChew replaces old i.mjh.nz (DMCA'd by Warner Bros)
   static const String _buddyBase =
@@ -97,6 +103,13 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
     return result ?? '';
   }
 
+  /// Fetch la liste pré-vérifiée vivante (régénérée toutes les 6h par CI).
+  /// Vide tant que la 1ère Action n'a pas tourné — non bloquant.
+  static Future<String> fetchVerifiedIndex() async {
+    final result = await _fetchPlaylist(_verifiedIndex);
+    return result ?? '';
+  }
+
   /// Fetch free streaming services in parallel (non-blocking)
   static Future<String> fetchFreeServices() async {
     // Use individual timeouts per fetch (already 30s each in _fetchPlaylist).
@@ -122,6 +135,7 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
 
     try {
       final results = await Future.wait([
+        fetchVerifiedIndex(), // pré-vérifiées vivantes (en 1er = + fiables)
         fetchMasterIndex(),
         fetchFreeServices(),
       ]).timeout(const Duration(seconds: 60));
