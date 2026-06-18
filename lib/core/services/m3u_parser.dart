@@ -103,6 +103,8 @@ class M3uParser {
           id: id,
           name: name,
           url: line,
+          tvgId: tvgId,
+          quality: _detectQuality(name),
           logoUrl: logoUrl,
           group: group,
           language: language,
@@ -136,6 +138,16 @@ class M3uParser {
 
   static String _extract(RegExp regex, String line) {
     return regex.firstMatch(line)?.group(1) ?? '';
+  }
+
+  // Détecte la qualité depuis les marqueurs courants dans le nom de la chaîne.
+  static String _detectQuality(String name) {
+    final n = name.toUpperCase();
+    if (n.contains('4K') || n.contains('UHD') || n.contains('2160')) return '4K';
+    if (n.contains('FHD') || n.contains('1080')) return 'FHD';
+    if (n.contains('HD') || n.contains('720')) return 'HD';
+    if (n.contains('SD') || n.contains('480')) return 'SD';
+    return '';
   }
 
   static String _extractDisplayName(String line) {

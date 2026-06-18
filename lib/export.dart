@@ -22,7 +22,7 @@ export 'features/home/presentation/widgets/channel_grid.dart';
 export 'features/home/presentation/widgets/category_bar.dart';
 export 'features/home/provider/home_provider.dart';
 export 'features/player/presentation/pages/player_screen.dart';
-export 'features/player/provider/player_provider.dart';
+export 'features/player/provider/mini_player_provider.dart';
 export 'features/favorites/presentation/pages/favorites_screen.dart';
 export 'features/favorites/provider/favorites_provider.dart';
 

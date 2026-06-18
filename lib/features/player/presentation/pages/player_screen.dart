@@ -7,6 +7,8 @@ import 'package:iptv/config/theme/typography/app_typography.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/home/provider/home_provider.dart';
 import 'package:iptv/features/player/provider/mini_player_provider.dart';
+import 'package:iptv/features/player/presentation/widgets/player_tracks_sheet.dart';
+import 'package:iptv/features/epg/provider/epg_provider.dart';
 
 class PlayerScreen extends StatefulWidget {
   final ChannelEntity channel;
@@ -327,10 +329,39 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         letterSpacing: 1.2,
                       ),
                     ),
+                    // Badge qualité (FHD/HD...) si la source en déclare une.
+                    if (widget.channel.quality.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColor.primaryColor.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          widget.channel.quality,
+                          style: AppTypography.caption.copyWith(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
+                _buildEpgLine(),
               ],
             ),
+          ),
+          // Sélection qualité / audio / sous-titres
+          IconButton(
+            onPressed: () {
+              final player = mp.player;
+              if (player != null) showTracksSheet(context, player);
+            },
+            icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
           ),
           IconButton(
             onPressed: () => mp.enterPiP(),
@@ -339,6 +370,40 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Ligne EPG "en cours / à suivre" sous le nom de la chaîne.
+  Widget _buildEpgLine() {
+    if (widget.channel.tvgId.isEmpty) return const SizedBox.shrink();
+    return Consumer<EpgProvider>(
+      builder: (context, epg, _) {
+        final nn = epg.nowNext(widget.channel.tvgId);
+        if (nn.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (nn.now != null)
+                Text(
+                  '▶ ${nn.now!.title}',
+                  style: AppTypography.caption
+                      .copyWith(color: Colors.white, fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (nn.next != null)
+                Text(
+                  'À suivre : ${nn.next!.title}',
+                  style: AppTypography.caption.copyWith(color: AppColor.textMuted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

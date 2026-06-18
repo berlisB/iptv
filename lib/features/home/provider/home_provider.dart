@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:iptv/core/services/m3u_parser.dart';
 import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/data/datasources/m3u_data_source.dart';
+import 'package:iptv/features/home/data/datasources/xtream_service.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/home/domain/entities/channel_group.dart';
 
@@ -179,6 +180,18 @@ class HomeProvider extends ChangeNotifier {
     final m3uContent = await M3uDataSource.loadAllPlaylists();
     final parsed = M3uParser.parse(m3uContent);
 
+    // Abonnement Xtream Codes : chaînes prioritaires (placées en tête → source
+    // principale lors de la fusion). L'utilisateur les paie, elles sont fiables.
+    final xtream = AppStorage.getXtreamConfig();
+    if (xtream != null) {
+      final xchannels = await XtreamService.fetchLiveChannels(
+        host: xtream['host']!,
+        username: xtream['username']!,
+        password: xtream['password']!,
+      );
+      parsed.insertAll(0, xchannels);
+    }
+
     // Filter pipeline
     _allChannels = parsed.where((c) {
       final url = c.url.toLowerCase();
@@ -199,16 +212,12 @@ class HomeProvider extends ChangeNotifier {
         'after filters: ${_allChannels.length}, '
         'geo-blocked: $_geoBlockedCount');
 
-    // Deduplicate by name
-    final seen = <String>{};
-    _allChannels = _allChannels.where((c) {
-      final key = c.name.toLowerCase().trim();
-      if (seen.contains(key)) return false;
-      seen.add(key);
-      return true;
-    }).toList();
+    // Fusion des doublons : au lieu de jeter une chaîne en double, on garde
+    // ses URLs comme sources de secours (failover) → plus de chaînes fonctionnelles.
+    _allChannels = _mergeDuplicates(_allChannels);
 
-    debugPrint('[IPTV] After dedup: ${_allChannels.length} channels');
+    debugPrint('[IPTV] After merge: ${_allChannels.length} channels '
+        '(${_allChannels.fold<int>(0, (s, c) => s + c.backupUrls.length)} backup sources)');
 
     // Build normalized group mapping (per-channel because isAdult depends on name)
     _normalizedGroups.clear();
@@ -238,6 +247,48 @@ class HomeProvider extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Fusionne les chaînes de même identité : la meilleure source devient
+  /// principale, les autres URLs deviennent des secours (failover). Cap à 6.
+  static List<ChannelEntity> _mergeDuplicates(List<ChannelEntity> channels) {
+    final Map<String, ChannelEntity> merged = {};
+
+    for (final c in channels) {
+      final key = c.name.toLowerCase().trim();
+      final existing = merged[key];
+
+      if (existing == null) {
+        merged[key] = c;
+        continue;
+      }
+
+      // Évite d'ajouter une URL déjà connue.
+      if (existing.url == c.url || existing.backupUrls.contains(c.url)) continue;
+
+      // On choisit la meilleure source comme principale (non géo-bloquée + qualité).
+      final keepNewAsPrimary = _isBetterSource(c, existing);
+      final primary = keepNewAsPrimary ? c : existing;
+      final extraUrl = keepNewAsPrimary ? existing.url : c.url;
+
+      final backups = <String>{
+        ...primary.backupUrls,
+        extraUrl,
+        ...(keepNewAsPrimary ? existing.backupUrls : c.backupUrls),
+      }.take(6).toList();
+
+      merged[key] = primary.copyWith(backupUrls: backups);
+    }
+
+    return merged.values.toList();
+  }
+
+  /// Une source est "meilleure" si elle n'est pas géo-bloquée et porte une qualité.
+  static bool _isBetterSource(ChannelEntity candidate, ChannelEntity current) {
+    if (current.isGeoBlocked && !candidate.isGeoBlocked) return true;
+    if (!current.isGeoBlocked && candidate.isGeoBlocked) return false;
+    final score = {'4K': 4, 'FHD': 3, 'HD': 2, 'SD': 1, '': 0};
+    return (score[candidate.quality] ?? 0) > (score[current.quality] ?? 0);
   }
 
   void _loadRecentAndFrequent() {
@@ -333,10 +384,19 @@ class HomeProvider extends ChangeNotifier {
   void _applyFilters() {
     var channels = List<ChannelEntity>.from(_allChannels);
 
-    // Confirmed (reliable) channels: hide from main list
+    // Chaînes fiables FRAÎCHES : retirées de la liste principale (elles ont
+    // leur onglet). Les confirmations périmées (>7j) reviennent pour re-test.
     final confirmed = AppStorage.getConfirmedChannels();
     if (confirmed.isNotEmpty) {
-      channels = channels.where((c) => !confirmed.contains(c.id)).toList();
+      channels = channels
+          .where((c) =>
+              !(confirmed.contains(c.id) && AppStorage.isReliableFresh(c.id)))
+          .toList();
+    }
+
+    // Chaînes "mortes" (3+ échecs DURS) masquées sauf si l'utilisateur l'autorise.
+    if (!_showHidden) {
+      channels = channels.where((c) => !AppStorage.isDead(c.id)).toList();
     }
 
     // Hidden

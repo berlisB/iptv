@@ -21,8 +21,10 @@ class _ReliableScreenState extends State<ReliableScreen> {
 
   List<ChannelEntity> _getReliableChannels(HomeProvider hp) {
     final confirmedIds = AppStorage.getConfirmedChannels();
+    // Seules les confirmations encore fraîches (<7j) restent "fiables".
     var channels = hp.allChannels
-        .where((c) => confirmedIds.contains(c.id))
+        .where((c) =>
+            confirmedIds.contains(c.id) && AppStorage.isReliableFresh(c.id))
         .toList();
 
     if (_searchQuery.isNotEmpty) {

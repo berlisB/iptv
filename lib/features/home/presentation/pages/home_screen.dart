@@ -11,6 +11,7 @@ import 'package:iptv/features/home/presentation/widgets/category_bar.dart';
 import 'package:iptv/features/home/presentation/widgets/channel_grid.dart';
 import 'package:iptv/features/home/provider/home_provider.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
+import 'package:iptv/features/epg/provider/epg_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,7 +25,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeProvider>().loadChannels();
+      final hp = context.read<HomeProvider>();
+      // Une fois les chaînes prêtes, on charge l'EPG en arrière-plan.
+      hp.loadChannels().then((_) {
+        if (!mounted) return;
+        final ids = hp.allChannels
+            .map((c) => c.tvgId)
+            .where((id) => id.isNotEmpty)
+            .toSet();
+        context.read<EpgProvider>().load(ids);
+      });
     });
   }
 

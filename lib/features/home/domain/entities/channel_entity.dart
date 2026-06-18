@@ -23,10 +23,21 @@ class ChannelEntity extends Equatable {
   final String id;
   final String name;
   final String url;
+
+  /// URLs de secours (même chaîne, autres sources) pour le failover automatique.
+  final List<String> backupUrls;
+
   final String logoUrl;
   final String group;
   final String language;
   final String country;
+
+  /// Identifiant EPG d'origine (tvg-id) conservé pour mapper le guide des programmes.
+  final String tvgId;
+
+  /// Qualité déclarée par la source (ex: "1080p", "720p"), vide si inconnue.
+  final String quality;
+
   final MediaType mediaType;
   final ChannelHttpHeaders httpHeaders;
 
@@ -36,16 +47,25 @@ class ChannelEntity extends Equatable {
     required this.id,
     required this.name,
     required this.url,
+    this.backupUrls = const [],
     this.logoUrl = '',
     this.group = 'Autres',
     this.language = '',
     this.country = '',
+    this.tvgId = '',
+    this.quality = '',
     this.mediaType = MediaType.livestream,
     this.httpHeaders = const ChannelHttpHeaders(),
     this.isGeoBlocked = false,
   });
 
   bool get isLivestream => mediaType == MediaType.livestream;
+
+  /// Toutes les URLs jouables (principale + secours) dans l'ordre de tentative.
+  List<String> get allUrls => [url, ...backupUrls];
+
+  /// Nombre total de sources disponibles pour cette chaîne.
+  int get sourceCount => 1 + backupUrls.length;
 
   bool get isAdult {
     final g = group.toLowerCase();
@@ -58,7 +78,7 @@ class ChannelEntity extends Equatable {
         n.contains('+18');
   }
 
-  /// Clean name without geo-blocked markers
+  /// Nom nettoyé des marqueurs (géo-bloqué, not 24/7...).
   String get cleanName => name
       .replaceAll(RegExp(r'\[Geo-blocked\]', caseSensitive: false), '')
       .replaceAll('Ⓖ', '')
@@ -73,10 +93,13 @@ class ChannelEntity extends Equatable {
     String? id,
     String? name,
     String? url,
+    List<String>? backupUrls,
     String? logoUrl,
     String? group,
     String? language,
     String? country,
+    String? tvgId,
+    String? quality,
     MediaType? mediaType,
     ChannelHttpHeaders? httpHeaders,
     bool? isGeoBlocked,
@@ -85,10 +108,13 @@ class ChannelEntity extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       url: url ?? this.url,
+      backupUrls: backupUrls ?? this.backupUrls,
       logoUrl: logoUrl ?? this.logoUrl,
       group: group ?? this.group,
       language: language ?? this.language,
       country: country ?? this.country,
+      tvgId: tvgId ?? this.tvgId,
+      quality: quality ?? this.quality,
       mediaType: mediaType ?? this.mediaType,
       httpHeaders: httpHeaders ?? this.httpHeaders,
       isGeoBlocked: isGeoBlocked ?? this.isGeoBlocked,
@@ -97,5 +123,5 @@ class ChannelEntity extends Equatable {
 
   @override
   List<Object?> get props =>
-      [id, name, url, logoUrl, group, language, country, mediaType];
+      [id, name, url, backupUrls, logoUrl, group, language, country, mediaType];
 }

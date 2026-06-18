@@ -4,6 +4,7 @@ import 'package:iptv/config/theme/color/app_color.dart';
 import 'package:iptv/config/theme/typography/app_typography.dart';
 import 'package:iptv/features/home/provider/home_provider.dart';
 
+/// Barre de catégories horizontale toujours visible : filtrage en un seul tap.
 class CategoryBar extends StatelessWidget {
   const CategoryBar({super.key});
 
@@ -11,82 +12,86 @@ class CategoryBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HomeProvider>(
       builder: (context, provider, _) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              // Filter button
-              Expanded(
-                child: GestureDetector(
+        // "Tout" + catégories déjà triées par nombre de chaînes décroissant.
+        final names = provider.groupNames;
+        return SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: names.length + 1,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              // Dernier élément : chip "⋯" ouvrant la liste complète + recherche.
+              if (index == names.length) {
+                return _Chip(
+                  label: 'Plus',
+                  icon: Icons.tune_rounded,
+                  selected: false,
                   onTap: () => FilterSheetHelper.show(context, provider),
-                  child: Container(
-                    height: 42,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: provider.hasActiveFilters
-                          ? AppColor.primaryColor
-                          : AppColor.cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: provider.hasActiveFilters
-                            ? AppColor.primaryColor
-                            : AppColor.cardHover,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.tune_rounded,
-                          size: 18,
-                          color: provider.hasActiveFilters
-                              ? Colors.white
-                              : AppColor.textSecondary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            provider.hasActiveFilters
-                                ? provider.selectedGroup
-                                : 'Catégories (${provider.filteredChannels.length} chaînes)',
-                            style: AppTypography.body2.copyWith(
-                              color: provider.hasActiveFilters
-                                  ? Colors.white
-                                  : AppColor.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (!provider.hasActiveFilters)
-                          Icon(Icons.keyboard_arrow_down,
-                              size: 20, color: AppColor.textMuted),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Clear button
-              if (provider.hasActiveFilters) ...[
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () => provider.clearAllFilters(),
-                  child: Container(
-                    height: 42,
-                    width: 42,
-                    decoration: BoxDecoration(
-                      color: AppColor.accentRed.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.close,
-                        size: 18, color: AppColor.accentRed),
-                  ),
-                ),
-              ],
-            ],
+                );
+              }
+              final name = names[index];
+              return _Chip(
+                label: name,
+                icon: index == 0 ? Icons.grid_view_rounded : null,
+                selected: provider.selectedGroup == name,
+                onTap: () => provider.selectGroup(name),
+              );
+            },
           ),
         );
       },
+    );
+  }
+}
+
+/// Pastille de catégorie cliquable (état sélectionné mis en avant).
+class _Chip extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColor.primaryColor : AppColor.cardColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? AppColor.primaryColor : AppColor.cardHover,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon,
+                  size: 16,
+                  color: selected ? Colors.white : AppColor.textSecondary),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: AppTypography.body2.copyWith(
+                color: selected ? Colors.white : AppColor.textSecondary,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -177,5 +177,91 @@ class AppStorage {
 
   static Future<void> clearConfirmedChannels() async {
     await _prefs.remove(_confirmedKey);
+    await _prefs.remove(_confirmedAtKey);
+  }
+
+  // --- Fraîcheur des chaînes fiables (decay) ---
+  // Une chaîne confirmée "fiable" il y a plus de 7 jours doit être re-testée.
+  static const String _confirmedAtKey = 'confirmed_at';
+  static const int _reliableTtlMs = 7 * 24 * 60 * 60 * 1000;
+
+  static Map<String, int> _getConfirmedAt() {
+    final raw = _prefs.getString(_confirmedAtKey);
+    if (raw == null) return {};
+    return Map<String, int>.from(jsonDecode(raw));
+  }
+
+  // Mémorise l'instant de confirmation pour pouvoir faire expirer la fiabilité.
+  static Future<void> markConfirmedNow(String channelId) async {
+    final map = _getConfirmedAt();
+    map[channelId] = DateTime.now().millisecondsSinceEpoch;
+    await _prefs.setString(_confirmedAtKey, jsonEncode(map));
+  }
+
+  // Retourne true si la confirmation est encore fraîche (< TTL).
+  static bool isReliableFresh(String channelId, {int? nowMs}) {
+    final at = _getConfirmedAt()[channelId];
+    if (at == null) return true; // ancienne confirmation sans date → on garde
+    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
+    return (now - at) < _reliableTtlMs;
+  }
+
+  // --- Strikes : échecs DURS répétés (403/404/codec/DNS), jamais la lenteur ---
+  static const String _strikesKey = 'channel_strikes';
+  static const int strikeThreshold = 3; // banni seulement au-delà
+
+  static Map<String, int> _getStrikes() {
+    final raw = _prefs.getString(_strikesKey);
+    if (raw == null) return {};
+    return Map<String, int>.from(jsonDecode(raw));
+  }
+
+  static int getStrikes(String channelId) => _getStrikes()[channelId] ?? 0;
+
+  // Ajoute un strike (échec dur) et renvoie le nouveau total.
+  static Future<int> addStrike(String channelId) async {
+    final map = _getStrikes();
+    final next = (map[channelId] ?? 0) + 1;
+    map[channelId] = next;
+    await _prefs.setString(_strikesKey, jsonEncode(map));
+    return next;
+  }
+
+  // Remet les strikes à zéro dès qu'une chaîne refonctionne (decay au succès).
+  static Future<void> resetStrikes(String channelId) async {
+    final map = _getStrikes();
+    if (map.remove(channelId) != null) {
+      await _prefs.setString(_strikesKey, jsonEncode(map));
+    }
+  }
+
+  // Une chaîne n'est considérée "morte" qu'après strikeThreshold échecs durs.
+  static bool isDead(String channelId) =>
+      getStrikes(channelId) >= strikeThreshold;
+
+  static Future<void> clearStrikes() async {
+    await _prefs.remove(_strikesKey);
+  }
+
+  // --- Abonnement Xtream Codes (optionnel) ---
+  static const String _xtreamKey = 'xtream_config';
+
+  // Retourne {host, username, password} ou null si non configuré.
+  static Map<String, String>? getXtreamConfig() {
+    final raw = _prefs.getString(_xtreamKey);
+    if (raw == null) return null;
+    return Map<String, String>.from(jsonDecode(raw));
+  }
+
+  static Future<void> setXtreamConfig(
+      String host, String username, String password) async {
+    await _prefs.setString(
+      _xtreamKey,
+      jsonEncode({'host': host, 'username': username, 'password': password}),
+    );
+  }
+
+  static Future<void> clearXtreamConfig() async {
+    await _prefs.remove(_xtreamKey);
   }
 }

@@ -5,6 +5,7 @@ import 'package:iptv/config/theme/typography/app_typography.dart';
 import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/provider/home_provider.dart';
 import 'package:iptv/features/home/presentation/widgets/category_bar.dart';
+import 'package:iptv/features/settings/presentation/widgets/xtream_settings.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -66,6 +67,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: !hp.showUndefined,
               onChanged: (_) => hp.toggleShowUndefined(),
             ),
+
+            const SizedBox(height: 24),
+
+            // --- Abonnement ---
+            _buildSectionTitle('Abonnement (IPTV premium)'),
+            const SizedBox(height: 8),
+            const XtreamSettingsTile(),
 
             const SizedBox(height: 24),
 
