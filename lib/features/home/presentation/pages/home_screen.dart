@@ -71,8 +71,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text('IPTV Player', style: AppTypography.heading3),
                         Consumer<HomeProvider>(
                           builder: (context, provider, _) {
+                            final n = provider.filteredChannels.length;
+                            final label = provider.isReliableMode
+                                ? 'Sélection fiable'
+                                : 'Explorer';
                             return Text(
-                              '${provider.allChannels.length} chaînes disponibles',
+                              '$n chaîne${n > 1 ? 's' : ''} · $label',
                               style: AppTypography.caption,
                             );
                           },
@@ -85,6 +89,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 16),
+
+            // Mode : Sélection fiable / Explorer
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: _ModeToggle(),
+            ),
+
+            const SizedBox(height: 12),
 
             // Search
             Padding(
@@ -258,10 +270,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGridCard(
       HomeProvider provider, ChannelEntity channel, int index) {
+    final badge = provider.badgeFor(channel);
     return GestureDetector(
       onTap: () => context.push(AppPage.player.path, extra: channel),
       onLongPress: () => _showChannelOptions(channel),
-      child: Container(
+      child: Stack(
+        children: [
+          _gridCardBody(provider, channel),
+          if (badge != null)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColor.accentOrange.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge,
+                  style: AppTypography.caption.copyWith(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _gridCardBody(HomeProvider provider, ChannelEntity channel) {
+    return Container(
         decoration: BoxDecoration(
           color: provider.isHidden(channel.id)
               ? AppColor.cardColor.withValues(alpha: 0.4)
@@ -365,7 +407,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -452,6 +493,87 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Bascule "Sélection fiable" / "Explorer" (deux pilules segmentées).
+class _ModeToggle extends StatelessWidget {
+  const _ModeToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<HomeProvider>(
+      builder: (context, provider, _) {
+        return Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColor.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColor.cardHover.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              _segment(
+                context,
+                label: 'Sélection fiable',
+                icon: Icons.verified_rounded,
+                selected: provider.isReliableMode,
+                onTap: () => provider.setMode(CatalogMode.reliable),
+                color: AppColor.accentGreen,
+              ),
+              _segment(
+                context,
+                label: 'Explorer',
+                icon: Icons.travel_explore_rounded,
+                selected: !provider.isReliableMode,
+                onTap: () => provider.setMode(CatalogMode.explore),
+                color: AppColor.primaryColor,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _segment(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.18) : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  size: 16,
+                  color: selected ? color : AppColor.textMuted),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTypography.body2.copyWith(
+                  color: selected ? color : AppColor.textMuted,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

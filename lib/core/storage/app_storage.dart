@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:iptv/core/catalog/curation_config.dart';
 
 class AppStorage {
   static late SharedPreferences _prefs;
@@ -243,6 +244,78 @@ class AppStorage {
     await _prefs.remove(_strikesKey);
   }
 
+  // --- Score de fiabilité (0..100, decay graduel) ---------------------------
+  // Complète les "strikes" (binaire mort/vivant) par un score continu utilisé
+  // pour classer et masquer. Règles centralisées dans CurationConfig.
+  static const String _scoreKey = 'reliability_scores';
+  static const String _checkedAtKey = 'reliability_checked_at';
+
+  static Map<String, int> _getScores() {
+    final raw = _prefs.getString(_scoreKey);
+    if (raw == null) return {};
+    return Map<String, int>.from(jsonDecode(raw));
+  }
+
+  /// Score courant d'une chaîne (valeur initiale si jamais testée).
+  static int getScore(String channelId) =>
+      _getScores()[channelId] ?? CurationConfig.initialScore;
+
+  static Future<void> _applyDelta(String channelId, int delta) async {
+    final map = _getScores();
+    final current = map[channelId] ?? CurationConfig.initialScore;
+    map[channelId] = CurationConfig.clampScore(current + delta);
+    await _prefs.setString(_scoreKey, jsonEncode(map));
+    await _markChecked(channelId);
+  }
+
+  /// Lecture/probe réussie → on récompense (et on efface les strikes).
+  static Future<void> recordSuccess(String channelId) async {
+    await _applyDelta(channelId, CurationConfig.rewardSuccess);
+    await resetStrikes(channelId);
+  }
+
+  /// Échec mou (injoignable/transitoire) → pénalité douce.
+  static Future<void> recordSoftFail(String channelId) =>
+      _applyDelta(channelId, -CurationConfig.penaltySoftFail);
+
+  /// Timeout → pénalité moyenne.
+  static Future<void> recordTimeout(String channelId) =>
+      _applyDelta(channelId, -CurationConfig.penaltyTimeout);
+
+  /// Échec dur (403/404/410/codec) → forte pénalité + strike.
+  static Future<void> recordHardFail(String channelId) async {
+    await _applyDelta(channelId, -CurationConfig.penaltyHardFail);
+    await addStrike(channelId);
+  }
+
+  /// True si le score est sous le seuil "Sélection fiable".
+  static bool isBelowReliableThreshold(String channelId) =>
+      getScore(channelId) < CurationConfig.reliableThreshold;
+
+  static Future<void> clearScores() async {
+    await _prefs.remove(_scoreKey);
+    await _prefs.remove(_checkedAtKey);
+  }
+
+  // Horodatage de la dernière vérification de flux.
+  static Map<String, int> _getCheckedAtMap() {
+    final raw = _prefs.getString(_checkedAtKey);
+    if (raw == null) return {};
+    return Map<String, int>.from(jsonDecode(raw));
+  }
+
+  static Future<void> _markChecked(String channelId) async {
+    final map = _getCheckedAtMap();
+    map[channelId] = DateTime.now().millisecondsSinceEpoch;
+    await _prefs.setString(_checkedAtKey, jsonEncode(map));
+  }
+
+  /// Dernière vérification connue (null = jamais testée).
+  static DateTime? getCheckedAt(String channelId) {
+    final ms = _getCheckedAtMap()[channelId];
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
   // --- Abonnement Xtream Codes (optionnel) ---
   static const String _xtreamKey = 'xtream_config';
 
@@ -263,5 +336,32 @@ class AppStorage {
 
   static Future<void> clearXtreamConfig() async {
     await _prefs.remove(_xtreamKey);
+  }
+
+  // --- Source Daddylive (optionnelle, étude éducative) ---
+  static const String _daddyliveEnabledKey = 'daddylive_enabled';
+
+  static bool getDaddyliveEnabled() =>
+      _prefs.getBool(_daddyliveEnabledKey) ?? false;
+
+  static Future<void> setDaddyliveEnabled(bool v) async {
+    await _prefs.setBool(_daddyliveEnabledKey, v);
+  }
+
+  /// Flag pour savoir si les données player ont déjà été chargées en cache.
+  static const String _daddyliveCachedKey = 'daddylive_cached_at';
+
+  static int getDaddyliveCachedAt() =>
+      _prefs.getInt(_daddyliveCachedKey) ?? 0;
+
+  static Future<void> setDaddyliveCachedAt() async {
+    await _prefs.setInt(
+        _daddyliveCachedKey, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// Le cache expire après 1h.
+  static bool get isDaddyliveCacheFresh {
+    final age = DateTime.now().millisecondsSinceEpoch - getDaddyliveCachedAt();
+    return age < 3600000; // 1h
   }
 }

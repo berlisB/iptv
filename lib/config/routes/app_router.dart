@@ -7,6 +7,7 @@ import 'package:iptv/features/player/presentation/pages/player_screen.dart';
 import 'package:iptv/features/favorites/presentation/pages/favorites_screen.dart';
 import 'package:iptv/features/settings/presentation/pages/settings_screen.dart';
 import 'package:iptv/features/reliable/presentation/pages/reliable_screen.dart';
+import 'package:iptv/features/daddylive/presentation/pages/daddylive_screen.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/bottom_navigation_bar/presentation/navigator_bar.dart';
 
@@ -55,6 +56,15 @@ class AppRouter {
                 path: AppPage.reliable.path,
                 name: AppPage.reliable.name,
                 builder: (context, state) => const ReliableScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppPage.daddylive.path,
+                name: AppPage.daddylive.name,
+                builder: (context, state) => const DaddyliveScreen(),
               ),
             ],
           ),

@@ -70,6 +70,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
+            // --- Sources ---
+            _buildSectionTitle('Sources'),
+            const SizedBox(height: 8),
+            _buildToggleTile(
+              icon: Icons.sports_esports_outlined,
+              title: 'Daddylive (étude éducative)',
+              subtitle: hp.daddyliveEnabled
+                  ? 'Active · ${hp.rawChannels.where((c) => c.id.startsWith('daddylive_')).length} chaînes'
+                  : 'Désactivée · Sport & divertissement',
+              value: hp.daddyliveEnabled,
+              activeColor: AppColor.accentRed,
+              onChanged: (v) async {
+                await AppStorage.setDaddyliveEnabled(v);
+                hp.loadChannels();
+              },
+            ),
+
+            const SizedBox(height: 24),
+
             // --- Abonnement ---
             _buildSectionTitle('Abonnement (IPTV premium)'),
             const SizedBox(height: 8),

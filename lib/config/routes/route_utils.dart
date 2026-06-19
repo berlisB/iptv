@@ -4,6 +4,7 @@ enum AppPage {
   player(path: '/player', name: 'Player'),
   favorites(path: '/favorites', name: 'Favorites'),
   reliable(path: '/reliable', name: 'Reliable'),
+  daddylive(path: '/daddylive', name: 'Daddylive'),
   settings(path: '/settings', name: 'Settings');
 
   final String path;

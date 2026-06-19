@@ -1,12 +1,40 @@
 import 'package:flutter/foundation.dart';
 import 'package:iptv/core/services/m3u_parser.dart';
 import 'package:iptv/core/storage/app_storage.dart';
+import 'package:iptv/features/home/data/datasources/daddylive_service.dart';
 import 'package:iptv/features/home/data/datasources/m3u_data_source.dart';
 import 'package:iptv/features/home/data/datasources/xtream_service.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/home/domain/entities/channel_group.dart';
+import 'package:iptv/features/home/domain/services/channel_filter.dart';
+import 'package:iptv/features/home/domain/services/channel_service.dart';
+
+/// Deux modes d'affichage des chaînes.
+///  - [reliable] : catalogue curé (peu de chaînes, fiables, francophone-first).
+///  - [explore]  : sources brutes filtrées par audience (plus large, badges).
+enum CatalogMode { reliable, explore }
 
 class HomeProvider extends ChangeNotifier {
+  HomeProvider({ChannelService? channelService})
+      : _channelService = channelService ?? ChannelService();
+
+  final ChannelService _channelService;
+  final ChannelFilter _filter = const ChannelFilter();
+
+  /// Catégories orientées utilisateur (ordre = priorité d'affichage des chips).
+  static const List<String> userCategories = [
+    'Francophone',
+    'Afrique francophone',
+    'Infos',
+    'Films & séries gratuits',
+    'Documentaires',
+    'Sport gratuit',
+    'Musique',
+    'Enfants',
+    'Anglais utile',
+    'Sans barrière de langue',
+  ];
+
   // --- Category normalization: merge fragmented groups into broad categories ---
   static const Map<String, String> _categoryMap = {
     // Actualités
@@ -122,12 +150,17 @@ class HomeProvider extends ChangeNotifier {
   }
 
   // --- State ---
-  List<ChannelEntity> _allChannels = [];
+  List<ChannelEntity> _allChannels = []; // sources brutes (mode Explorer)
+  List<ChannelEntity> _catalogChannels = []; // catalogue curé (mode Fiable)
+  List<ChannelEntity> _lookupPool = []; // union par id (favoris/récents/EPG)
+  List<ChannelEntity> _modeBase = []; // base affichée selon le mode courant
   List<ChannelEntity> _filteredChannels = [];
   List<ChannelEntity> _recentChannels = [];
   List<ChannelEntity> _frequentChannels = [];
   List<ChannelGroup> _groups = [];
   Set<String> _blocklist = {};
+
+  CatalogMode _mode = CatalogMode.reliable;
 
   /// Maps original group name → normalized category for each channel
   final Map<String, String> _normalizedGroups = {};
@@ -139,8 +172,20 @@ class HomeProvider extends ChangeNotifier {
   bool _showGeoBlocked = false;
   bool _showUndefined = true;
   int _geoBlockedCount = 0;
+  bool _daddyliveEnabled = false;
 
-  List<ChannelEntity> get allChannels => _allChannels;
+  /// Union catalogue + brut (résolution par id : favoris, récents, EPG, fiables).
+  List<ChannelEntity> get allChannels => _lookupPool;
+
+  /// Sources brutes uniquement (mode Explorer).
+  List<ChannelEntity> get rawChannels => _allChannels;
+
+  /// Catalogue curé uniquement (mode Fiable).
+  List<ChannelEntity> get catalogChannels => _catalogChannels;
+
+  CatalogMode get mode => _mode;
+  bool get isReliableMode => _mode == CatalogMode.reliable;
+
   List<ChannelEntity> get filteredChannels => _filteredChannels;
   List<ChannelEntity> get recentChannels => _recentChannels;
   List<ChannelEntity> get frequentChannels => _frequentChannels;
@@ -156,14 +201,72 @@ class HomeProvider extends ChangeNotifier {
   bool get hasActiveFilters => _selectedGroup != 'Tout';
   int get activeFilterCount => _selectedGroup != 'Tout' ? 1 : 0;
 
-  /// Get normalized category for a channel
+  /// Catégorie principale d'une chaîne pour le badge sur sa carte.
+  /// Les chaînes du catalogue portent déjà une catégorie orientée usage.
   String categoryOf(ChannelEntity c) {
+    if (c.category.isNotEmpty) return c.category;
     final key = '${c.group}|${c.isAdult}';
     return _normalizedGroups[key] ?? _normalizeGroup(c.group, isAdult: c.isAdult);
   }
 
+  /// Appartenance (multi) d'une chaîne à une catégorie orientée usage.
+  bool matchesCategory(ChannelEntity c, String cat) {
+    if (categoryOf(c) == cat) return true;
+    final aud = _filter.audienceOf(c);
+    final content = () {
+      final key = '${c.group}|${c.isAdult}';
+      return _normalizedGroups[key] ??
+          _normalizeGroup(c.group, isAdult: c.isAdult);
+    }();
+    switch (cat) {
+      case 'Francophone':
+        return aud == AudienceFit.francophone ||
+            aud == AudienceFit.africaFrancophone;
+      case 'Afrique francophone':
+        return aud == AudienceFit.africaFrancophone;
+      case 'Anglais utile':
+        return aud == AudienceFit.englishUseful;
+      case 'Sans barrière de langue':
+        return aud == AudienceFit.visualNoLanguage;
+      case 'Infos':
+        return content == 'Actualités';
+      case 'Films & séries gratuits':
+        return content == 'Films & Séries';
+      case 'Documentaires':
+        return content == 'Documentaires';
+      case 'Sport gratuit':
+        return content == 'Sport';
+      case 'Musique':
+        return content == 'Musique';
+      case 'Enfants':
+        return content == 'Enfants';
+    }
+    return false;
+  }
+
+  /// Badge à afficher sur une carte (null = aucun). Visible surtout en Explorer.
+  String? badgeFor(ChannelEntity c) {
+    if (c.isOfficial && c.status == ChannelStatus.online) return null;
+    if (c.status == ChannelStatus.online) return null;
+    if (_filter.audienceOf(c) == AudienceFit.other && c.language.isEmpty) {
+      return 'Langue variable';
+    }
+    if (c.isUnverified) return 'Non vérifiée';
+    return null;
+  }
+
   List<String> get groupNames {
     return ['Tout', ..._groups.map((g) => g.name)];
+  }
+
+  /// Bascule entre "Sélection fiable" et "Explorer".
+  void setMode(CatalogMode mode) {
+    if (_mode == mode) return;
+    _mode = mode;
+    _selectedGroup = 'Tout';
+    _recomputeBase();
+    _applyFilters();
+    notifyListeners();
   }
 
   Future<void> loadChannels() async {
@@ -190,6 +293,16 @@ class HomeProvider extends ChangeNotifier {
         password: xtream['password']!,
       );
       parsed.insertAll(0, xchannels);
+    }
+
+    // Source Daddylive (étude éducative) : activée dans les paramètres.
+    _daddyliveEnabled = AppStorage.getDaddyliveEnabled();
+    if (_daddyliveEnabled) {
+      final daddyliveChannels = await DaddyliveService.fetchAllChannels();
+      if (daddyliveChannels.isNotEmpty) {
+        parsed.insertAll(0, daddyliveChannels);
+        debugPrint('[IPTV] Daddylive: ${daddyliveChannels.length} chaînes');
+      }
     }
 
     // Filter pipeline
@@ -219,34 +332,76 @@ class HomeProvider extends ChangeNotifier {
     debugPrint('[IPTV] After merge: ${_allChannels.length} channels '
         '(${_allChannels.fold<int>(0, (s, c) => s + c.backupUrls.length)} backup sources)');
 
+    // Catalogue curé (mode "Sélection fiable") : rapide (asset local).
+    _catalogChannels = await _channelService.loadCatalog();
+    debugPrint('[IPTV] Catalogue curé: ${_catalogChannels.length} chaînes');
+
+    // Pool union par id (favoris/récents/EPG/fiables) — catalogue prioritaire.
+    final seenIds = <String>{};
+    _lookupPool = [
+      for (final c in [..._catalogChannels, ..._allChannels])
+        if (seenIds.add(c.id)) c,
+    ];
+
     // Build normalized group mapping (per-channel because isAdult depends on name)
     _normalizedGroups.clear();
-    for (final c in _allChannels) {
+    for (final c in _lookupPool) {
       final key = '${c.group}|${c.isAdult}';
       if (!_normalizedGroups.containsKey(key)) {
         _normalizedGroups[key] = _normalizeGroup(c.group, isAdult: c.isAdult);
       }
     }
 
-    // Build groups using normalized categories
-    final Map<String, List<ChannelEntity>> groupMap = {};
-    for (final channel in _allChannels) {
-      final cat = categoryOf(channel);
-      groupMap.putIfAbsent(cat, () => []).add(channel);
-    }
-    _groups = groupMap.entries
-        .map((e) => ChannelGroup(name: e.key, channels: e.value))
-        .toList()
-      ..sort((a, b) => b.count.compareTo(a.count));
-
-    debugPrint('[IPTV] Categories: ${_groups.length} '
-        '(${_groups.take(5).map((g) => '${g.name}:${g.count}').join(', ')}, ...)');
-
+    _recomputeBase();
     _loadRecentAndFrequent();
     _applyFilters();
 
     _isLoading = false;
     notifyListeners();
+
+    // Validation des flux du catalogue en arrière-plan (non bloquant) : met à
+    // jour les scores, puis on rafraîchit la base si le mode Fiable est actif.
+    _validateCatalogInBackground();
+  }
+
+  /// (Re)calcule la base affichée selon le mode et reconstruit les catégories.
+  void _recomputeBase() {
+    _modeBase = isReliableMode
+        ? _channelService.reliableSelection(_catalogChannels)
+        : _channelService.exploreSelection(_allChannels);
+    _rebuildGroups();
+  }
+
+  /// Construit les groupes par catégorie orientée usage à partir de la base.
+  void _rebuildGroups() {
+    final groups = <ChannelGroup>[];
+    for (final cat in userCategories) {
+      final channels =
+          _modeBase.where((c) => matchesCategory(c, cat)).toList();
+      if (channels.isNotEmpty) {
+        groups.add(ChannelGroup(name: cat, channels: channels));
+      }
+    }
+    _groups = groups;
+    debugPrint('[IPTV] Mode=$_mode base=${_modeBase.length} '
+        'catégories=${_groups.length}');
+  }
+
+  Future<void> _validateCatalogInBackground() async {
+    if (_catalogChannels.isEmpty) return;
+    final statuses = await _channelService.validateBatch(_catalogChannels);
+    // Réinjecte les statuts/scores frais dans le catalogue.
+    _catalogChannels = _catalogChannels
+        .map((c) => c.copyWith(
+              status: statuses[c.id] ?? c.status,
+              reliabilityScore: AppStorage.getScore(c.id),
+            ))
+        .toList();
+    if (isReliableMode) {
+      _recomputeBase();
+      _applyFilters();
+      notifyListeners();
+    }
   }
 
   /// Fusionne les chaînes de même identité : la meilleure source devient
@@ -296,7 +451,7 @@ class HomeProvider extends ChangeNotifier {
     _recentChannels = recentIds
         .map((id) {
           try {
-            return _allChannels.firstWhere((c) => c.id == id);
+            return _lookupPool.firstWhere((c) => c.id == id);
           } catch (_) {
             return null;
           }
@@ -309,7 +464,7 @@ class HomeProvider extends ChangeNotifier {
     _frequentChannels = frequentIds
         .map((id) {
           try {
-            return _allChannels.firstWhere((c) => c.id == id);
+            return _lookupPool.firstWhere((c) => c.id == id);
           } catch (_) {
             return null;
           }
@@ -360,6 +515,7 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool get daddyliveEnabled => _daddyliveEnabled;
   bool get showAdult => AppStorage.getShowAdult();
 
   void toggleShowAdult() {
@@ -382,16 +538,21 @@ class HomeProvider extends ChangeNotifier {
   }
 
   void _applyFilters() {
-    var channels = List<ChannelEntity>.from(_allChannels);
+    // Base = catalogue curé (Fiable) ou sources brutes filtrées (Explorer),
+    // déjà triée/exclue par le ChannelService.
+    var channels = List<ChannelEntity>.from(_modeBase);
 
-    // Chaînes fiables FRAÎCHES : retirées de la liste principale (elles ont
-    // leur onglet). Les confirmations périmées (>7j) reviennent pour re-test.
-    final confirmed = AppStorage.getConfirmedChannels();
-    if (confirmed.isNotEmpty) {
-      channels = channels
-          .where((c) =>
-              !(confirmed.contains(c.id) && AppStorage.isReliableFresh(c.id)))
-          .toList();
+    // En Explorer uniquement : les chaînes auto-confirmées fraîches sont
+    // retirées (elles vivent dans l'onglet "Fiables"). En mode Fiable on garde
+    // tout le catalogue, sinon il se viderait au fil des visionnages.
+    if (!isReliableMode) {
+      final confirmed = AppStorage.getConfirmedChannels();
+      if (confirmed.isNotEmpty) {
+        channels = channels
+            .where((c) =>
+                !(confirmed.contains(c.id) && AppStorage.isReliableFresh(c.id)))
+            .toList();
+      }
     }
 
     // Chaînes "mortes" (3+ échecs DURS) masquées sauf si l'utilisateur l'autorise.
@@ -423,9 +584,10 @@ class HomeProvider extends ChangeNotifier {
       }).toList();
     }
 
-    // Group/category (using normalized categories)
+    // Catégorie orientée usage (appartenance multi).
     if (_selectedGroup != 'Tout') {
-      channels = channels.where((c) => categoryOf(c) == _selectedGroup).toList();
+      channels =
+          channels.where((c) => matchesCategory(c, _selectedGroup)).toList();
     }
 
     // Search

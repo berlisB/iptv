@@ -235,7 +235,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Aucune donnée reçue du serveur.\nL\'URL est peut-être hors ligne.',
+                  widget.channel.isGeoBlocked
+                      ? 'Cette chaîne est géo-bloquée et indisponible\ndepuis votre région.'
+                      : 'Aucune donnée reçue du serveur.\nL\'URL est peut-être hors ligne.',
                   style: AppTypography.body2,
                   textAlign: TextAlign.center,
                 ),

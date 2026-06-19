@@ -54,6 +54,11 @@ class NavigatorBar extends StatelessWidget {
               label: 'Fiables',
             ),
             NavigationDestination(
+              icon: Icon(Icons.sports_esports_outlined, color: AppColor.textMuted),
+              selectedIcon: Icon(Icons.sports_esports, color: AppColor.accentRed),
+              label: 'Daddylive',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.settings_outlined, color: AppColor.textMuted),
               selectedIcon: Icon(Icons.settings, color: AppColor.primaryColor),
               label: 'Paramètres',

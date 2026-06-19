@@ -27,6 +27,11 @@ class M3uDataSource {
       'https://raw.githubusercontent.com/BuddyChewChew/app-m3u-generator/refs/heads/main/playlists';
   static const String _apsattBase = 'https://www.apsattv.com';
 
+  // Daddylive M3U (étude éducative) — événements sportifs en direct.
+  // Régénéré périodiquement par bestonkodi. URLs via dlhd.dad.
+  static const String _daddyliveM3U =
+      'https://tinyurl.com/bestonkodi-dlive';
+
   static const List<String> _freeServices = [
     // Free-TV (politique anti-abonnement explicite, ~100 pays)
     'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
@@ -129,6 +134,12 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
     return '$fr\n$intl';
   }
 
+  /// Fetch daddylive M3U (optionnel, étude éducative)
+  static Future<String> fetchDaddyliveM3U() async {
+    final result = await _fetchPlaylist(_daddyliveM3U);
+    return result ?? '';
+  }
+
   /// Load all sources
   static Future<String> loadAllPlaylists() async {
     final parts = <String>[];
@@ -138,6 +149,7 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
         fetchVerifiedIndex(), // pré-vérifiées vivantes (en 1er = + fiables)
         fetchMasterIndex(),
         fetchFreeServices(),
+        fetchDaddyliveM3U(), // M3U daddylive (événements sportifs)
       ]).timeout(const Duration(seconds: 60));
 
       for (final result in results) {

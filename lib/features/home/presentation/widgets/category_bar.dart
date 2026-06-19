@@ -307,7 +307,13 @@ class _FilterSheetState extends State<_FilterSheet> {
 
   IconData _iconForGroup(String name) {
     final n = name.toLowerCase();
-    if (n.contains('actualit') || n.contains('news')) return Icons.newspaper;
+    if (n.contains('afrique')) return Icons.public;
+    if (n.contains('francophone')) return Icons.flag;
+    if (n.contains('anglais')) return Icons.language;
+    if (n.contains('barrière') || n.contains('barriere')) return Icons.visibility;
+    if (n.contains('actualit') || n.contains('news') || n.contains('info')) {
+      return Icons.newspaper;
+    }
     if (n.contains('sport')) return Icons.sports_soccer;
     if (n.contains('film') || n.contains('séri')) return Icons.movie;
     if (n.contains('musique') || n.contains('music')) return Icons.music_note;
