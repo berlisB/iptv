@@ -1,5 +1,5 @@
 #EXTM3U
-# Généré par tools/healthcheck.py — 4927 flux vérifiés vivants. Sources 100% légales (FAST + broadcasters officiels).
+# Généré par tools/healthcheck.py — 4941 flux vérifiés vivants. Sources 100% légales (FAST + broadcasters officiels).
 #EXTINF:-1 tvg-id="NASATV.us" group-title="Officiel",NASA TV
 https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
 #EXTINF:-1 tvg-id="EuronewsEnglish.fr" group-title="Officiel",Euronews English
@@ -152,6 +152,8 @@ https://origin.dpsgo.com/ssai/event/g7_JOM0ORki9SR5RKHe-Kw/master.m3u8
 https://origin.dpsgo.com/ssai/event/f4TrySe8SoiGF8Lu3EIq1g/master.m3u8
 #EXTINF:-1 tvg-name="El Pingüino TV" tvg-logo="https://i.imgur.com/ohXs2NV.png" tvg-id="ElPinguinoTV.cl" tvg-chno="17" tvg-country="CL" group-title="Chile",El Pingüino TV
 https://redirector.rudo.video/hls-video/339f69c6122f6d8f4574732c235f09b7683e31a5/pinguinotv/pinguinotv.smil/playlist.m3u8
+#EXTINF:-1 tvg-name="UCL" tvg-logo="https://i.imgur.com/JxqVHPX.png" tvg-id="UCL.uy" tvg-chno="18" tvg-country="CL" group-title="Chile",UCL
+https://redirector.rudo.video/hls-video/c54ac2799874375c81c1672abb700870537c5223/ucl/ucl.smil/playlist.m3u8
 #EXTINF:-1 tvg-name="Deportes13 Ⓖ" tvg-logo="https://i.imgur.com/GRpxoPf.png" tvg-id="D13.cl" tvg-chno="19" tvg-country="CL" group-title="Chile",Deportes13 Ⓖ
 https://redirector.rudo.video/hls-video/ey6283je82983je9823je8jowowiekldk9838274/13d/13d.smil/playlist.m3u8
 #EXTINF:-1 tvg-name="TVN 3" tvg-logo="https://i.imgur.com/84lWqRi.png" tvg-id="TVN3.cl" tvg-chno="20" tvg-country="CL" group-title="Chile",TVN 3
@@ -178,10 +180,10 @@ https://tvjadran.stream.agatin.hr:3412/live/tvjadranlive.m3u8
 https://stream.luci.xyz/hls/LTV.m3u8
 #EXTINF:-1 tvg-name="RIK Sat" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Logo_RIK_Sat_2017.svg/640px-Logo_RIK_Sat_2017.svg.png" tvg-id="RIKSat.cy" tvg-chno="4" tvg-country="CY" group-title="Cyprus",RIK Sat
 https://l3.cloudskep.com/cybcsat/abr/playlist.m3u8
-#EXTINF:-1 tvg-name="ČT sport" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct-sport-cz.png" tvg-id="CTSport.cz" tvg-chno="4" tvg-country="CZ" group-title="Czech Republic",ČT sport
-https://sktv.mxnticek.eu/new/stream.php?ch=CTsport
-#EXTINF:-1 tvg-name="ČT :D" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct-d-cz.png" tvg-id="CTDecko.cz" tvg-chno="5" tvg-country="CZ" group-title="Czech Republic",ČT :D
-https://sktv.mxnticek.eu/new/stream.php?ch=CT_D
+#EXTINF:-1 tvg-name="ČT1" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct1-cz.png" tvg-id="CT1.cz" tvg-chno="1" tvg-country="CZ" group-title="Czech Republic",ČT1
+https://sktv.mxnticek.eu/new/stream.php?ch=CT1
+#EXTINF:-1 tvg-name="ČT2" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct2-cz.png" tvg-id="CT2.cz" tvg-chno="2" tvg-country="CZ" group-title="Czech Republic",ČT2
+https://sktv.mxnticek.eu/new/stream.php?ch=CT2
 #EXTINF:-1 tvg-name="TV Nova Ⓢ" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-cz.png" tvg-id="tvnova.cz" tvg-chno="8" tvg-country="CZ" group-title="Czech Republic",TV Nova Ⓢ
 https://sktv.mxnticek.eu/new/stream.php?ch=Nova
 #EXTINF:-1 tvg-name="Nova Cinema" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-cinema-cz.png" tvg-id="NovaCinema.cz" tvg-chno="9" tvg-country="CZ" group-title="Czech Republic",Nova Cinema
@@ -272,18 +274,32 @@ https://lifetv.bitflip.ee/live/stream1.m3u8
 http://dc.tbnbaltia.eu:8088/dvr/rewind-21600.m3u8
 #EXTINF:-1 tvg-name="Tingvarp" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/9/90/Logo_-_L%C3%B8gting.png" tvg-id="Tingvarp.fo" tvg-chno="2" tvg-country="FO" group-title="Faroe Islands",Tingvarp
 https://play.kringvarp.fo/redirect/tingvarp/_definst_/smil:tingvarp.smil?type=m3u8
+#EXTINF:-1 tvg-name="MTV3" tvg-logo="https://i.imgur.com/kNbmc8n.png" tvg-id="MTV3.fi" tvg-chno="3" tvg-country="FI" group-title="Finland",MTV3
+https://live-fi.tvkaista.net/mtv3/live.m3u8?src=freetv
+#EXTINF:-1 tvg-name="Nelonen" tvg-logo="https://i.imgur.com/BFbCyfY.png" tvg-id="Nelonen.fi" tvg-chno="4" tvg-country="FI" group-title="Finland",Nelonen
+https://live-fi.tvkaista.net/nelonen/live.m3u8?src=freetv
+#EXTINF:-1 tvg-name="MTV Sub" tvg-logo="https://i.imgur.com/VRCuxQt.png" tvg-id="Sub.fi" tvg-chno="6" tvg-country="FI" group-title="Finland",MTV Sub
+https://live-fi.tvkaista.net/sub/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="TV5 Finland" tvg-logo="https://i.imgur.com/MoukyGs.png" tvg-id="TV5.fi" tvg-chno="7" tvg-country="FI" group-title="Finland",TV5 Finland
 https://live-fi.tvkaista.net/tv5/live.m3u8?src=freetv
+#EXTINF:-1 tvg-name="Liv" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/0/06/Liv_color_RGB.png" tvg-id="Liv.fi" tvg-chno="8" tvg-country="FI" group-title="Finland",Liv
+https://live-fi.tvkaista.net/liv/live.m3u8?src=freetv
+#EXTINF:-1 tvg-name="Jim" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/9/92/Jim_color_RGB.png" tvg-id="Jim.fi" tvg-chno="9" tvg-country="FI" group-title="Finland",Jim
+https://live-fi.tvkaista.net/jim/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Kutonen" tvg-logo="https://i.imgur.com/4giVyxb.png" tvg-id="Kutonen.fi" tvg-chno="10" tvg-country="FI" group-title="Finland",Kutonen
 https://live-fi.tvkaista.net/kutonen/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="TLC Finland" tvg-logo="https://i.imgur.com/0d5hP3A.png" tvg-id="TLCFinland.fi" tvg-chno="11" tvg-country="FI" group-title="Finland",TLC Finland
 https://live-fi.tvkaista.net/tlc/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Star Channel Finland" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Star_Channel_2020.svg/640px-Star_Channel_2020.svg.png" tvg-id="StarChannel.fi" tvg-chno="12" tvg-country="FI" group-title="Finland",Star Channel Finland
 https://live-fi.tvkaista.net/star-channel/live.m3u8?src=freetv
+#EXTINF:-1 tvg-name="MTV Ava" tvg-logo="https://i.imgur.com/rtyJVgB.png" tvg-id="AVA.fi" tvg-chno="13" tvg-country="FI" group-title="Finland",MTV Ava
+https://live-fi.tvkaista.net/ava/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Frii" tvg-logo="https://i.imgur.com/ljKoG9I.png" tvg-id="Frii.fi" tvg-chno="15" tvg-country="FI" group-title="Finland",Frii
 https://live-fi.tvkaista.net/frii/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Alfa Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/fi/9/93/IRR-TV-1.png" tvg-id="IRRTV.fi" tvg-chno="17" tvg-country="FI" group-title="Finland",Alfa Ⓢ
 https://irrtv2.digitacdn.net/live/ott/irrtv/playlist.m3u8?organizationId=229401409&suiteItemId=230439940
+#EXTINF:-1 tvg-name="TapahtumaTV Eveo" tvg-logo="https://i.imgur.com/sR8nA8w.png" tvg-id="Eveo.fi" tvg-chno="18" tvg-country="FI" group-title="Finland",TapahtumaTV Eveo
+https://live-fi.tvkaista.net/tapahtumatv-eveo/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="OnniTV" tvg-logo="https://i.imgur.com/HzILf2H.png" tvg-id="KotiTV.fi" tvg-chno="33" tvg-country="FI" group-title="Finland",OnniTV
 https://onnitv.digitacdn.net/live/ott/onnitv/playlist.m3u8?organizationId=83459409&suiteItemId=83459780
 #EXTINF:-1 tvg-name="Taivas TV7" tvg-logo="https://i.imgur.com/a4iNVXA.png" tvg-id="TaivasTV7.fi" tvg-chno="45" tvg-country="FI" group-title="Finland",Taivas TV7
@@ -458,6 +474,8 @@ https://ertmmd.akamaized.net/ertradio/voiceofgreece/default/index.mpd
 https://www.youtube.com/@KNRgreenland/live
 #EXTINF:-1 tvg-name="KNR2 Ⓨ" tvg-logo="https://i.imgur.com/8Pf5SJb.png" tvg-id="KNR2.gl" tvg-chno="2" tvg-country="GL" group-title="Greenland",KNR2 Ⓨ
 https://www.youtube.com/@nutaarsiassat/live
+#EXTINF:-1 tvg-name="RTHK TV 31" tvg-logo="https://i.imgur.com/kf818kM.png" tvg-id="RTHKTV31.hk" tvg-chno="31" tvg-country="HK" group-title="Hong Kong",RTHK TV 31
+https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8
 #EXTINF:-1 tvg-name="M1 Hiradó Ⓨ" tvg-logo="https://i.imgur.com/neddXUd.png" tvg-id="M1.hu" tvg-chno="1" tvg-country="HU" group-title="Hungary",M1 Hiradó Ⓨ
 https://www.youtube.com/@M1-Hirado/live
 #EXTINF:-1 tvg-name="Hír TV" tvg-logo="https://onlinestream.live/logos/4740.png" tvg-id="HirTV.hu" tvg-chno="4" tvg-country="HU" group-title="Hungary",Hír TV
@@ -486,8 +504,6 @@ https://stream.y5.hu/stream/stream_bekescsaba/stream.m3u8
 https://cloudfront44.lexanetwork.com:1344/freerelay/16tv.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="CityTV (Belváros Lipótváros)" tvg-logo="https://www.citytv.hu/images/logo.png" tvg-chno="11" tvg-country="HU" group-title="Hungary",CityTV (Belváros Lipótváros)
 https://citytv.hu/playlist.m3u8
-#EXTINF:-1 tvg-name="FehérvárTV" tvg-logo="https://www.fehervartv.hu/css/img/icon-1-2.png" tvg-chno="12" tvg-country="HU" group-title="Hungary",FehérvárTV
-https://cloudfront44.lexanetwork.com:1344/freerelay/fehervartv.sdp/playlist.m3u8?key=EWSj2
 #EXTINF:-1 tvg-name="AlföldTV" tvg-logo="http://www.dealood.com/content/uploads/images/March2019/5c9721a07ea87-images-large.png" tvg-chno="13" tvg-country="HU" group-title="Hungary",AlföldTV
 https://cloudfront41.lexanetwork.com:1344/relay01/livestream006.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="Gyöngyös TV" tvg-logo="https://i.imgur.com/RHgaPCk.png" tvg-id="GyongyosiTV.hu" tvg-chno="14" tvg-country="HU" group-title="Hungary",Gyöngyös TV
@@ -500,6 +516,8 @@ https://eurobioinvest.hu:444/live/ktv.m3u8
 https://cloudfront41.lexanetwork.com:1344/xrelay/loverseny2.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="Zalaegerszeg TV" tvg-logo="https://zegtv.hu/wp-content/themes/assembly/images/zegtv-logo.png" tvg-id="ZalaegerszegiTV.hu" tvg-chno="20" tvg-country="HU" group-title="Hungary",Zalaegerszeg TV
 https://cloudfront44.lexanetwork.com:1344/freerelay/zegtv.sdp/playlist.m3u8
+#EXTINF:-1 tvg-name="Zugló TV" tvg-logo="http://zuglotv.hu/wp-content/themes/ztv/uploads/ztv_logo1.jpg" tvg-chno="21" tvg-country="HU" group-title="Hungary",Zugló TV
+https://cloudfront44.lexanetwork.com:1344/freerelay/zuglotv.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="DTV" tvg-logo="https://i.imgur.com/YSpqmSO.png" tvg-id="DTV.hu" tvg-chno="23" tvg-country="HU" group-title="Hungary",DTV
 http://cloudfront44.lexanetwork.com:1732/hlsrelay003/hls/livestream.sdp.m3u8
 #EXTINF:-1 tvg-name="Bajai TV" tvg-logo="https://i.imgur.com/cyReGWh.png" tvg-id="BajaiTV.hu" tvg-chno="24" tvg-country="HU" group-title="Hungary",Bajai TV
@@ -626,8 +644,12 @@ https://streaming.aurora.enhanced.live/live/mpc/enl0eG1mLmVncmVzcy5mZDJ2eHI=/out
 https://streaming.aurora.enhanced.live/live/mpc/enl0eG1mLmVncmVzcy5mZDJ2eHI=/out/v1/IT_SIMULCAST/TURBO/CMAF/index.m3u8
 #EXTINF:-1 tvg-name="Sportitalia Plus" tvg-logo="https://i.imgur.com/hu56Ya5.png" tvg-id="Sportitalia.it" tvg-chno="60" tvg-country="IT" group-title="Italy",Sportitalia Plus
 https://sportsitalia-samsungitaly.amagi.tv/playlist.m3u8
+#EXTINF:-1 tvg-name="Travel TV" tvg-logo="https://i.imgur.com/aXAUyLN.png" tvg-id="TravelTV.it" tvg-chno="61" tvg-country="IT" group-title="Italy",Travel TV
+https://streaming.softwarecreation.it/GoldTvSat/GoldTvSat/playlist.m3u8
 #EXTINF:-1 tvg-name="SuperTennis" tvg-logo="https://i.imgur.com/GzsPlbX.png" tvg-id="SuperTennis.it" tvg-chno="64" tvg-country="IT" group-title="Italy",SuperTennis
 https://live-embed.supertennix.hiway.media/restreamer/supertennix_client/gpu-a-c0-16/restreamer/outgest/aa3673f1-e178-44a9-a947-ef41db73211a/manifest.m3u8
+#EXTINF:-1 tvg-name="Alma TV" tvg-logo="https://i.imgur.com/Y8JiDwN.png" tvg-id="AlmaTV.it" tvg-chno="65" tvg-country="IT" group-title="Italy",Alma TV
+https://streaming.softwarecreation.it/AlmaTv/AlmaTv/playlist.m3u8
 #EXTINF:-1 tvg-name="Radio 105 TV Ⓖ" tvg-logo="https://i.imgur.com/3NiLKvj.png" tvg-id="Radio105TV.it" tvg-chno="66" tvg-country="IT" group-title="Italy",Radio 105 TV Ⓖ
 https://live02-seg.msr.cdn.mediaset.net/live/ch-ec/ec-clr.isml/index.m3u8
 #EXTINF:-1 tvg-name="R101 TV Ⓖ" tvg-logo="https://i.imgur.com/mWeEa9T.png" tvg-id="R101TV.it" tvg-chno="67" tvg-country="IT" group-title="Italy",R101 TV Ⓖ
@@ -764,6 +786,8 @@ https://media2021.rtvweb.com/giovannipaolotv/web/chunklist_w663456797.m3u8
 https://nrvideo1.newradio.it:1936/awrgaebshj/awrgaebshj/playlist.m3u8
 #EXTINF:-1 tvg-name="Globus Television" tvg-logo="https://i.imgur.com/yUTYqCv.png" tvg-country="IT" group-title="Italy",Globus Television
 https://cdn.cubws.com/live/globus.m3u8
+#EXTINF:-1 tvg-name="Gold Tv" tvg-logo="https://i.imgur.com/3rVi4kD.png" tvg-id="GoldTV.it" tvg-country="IT" group-title="Italy",Gold Tv
+https://streaming.softwarecreation.it/GoldTv/GoldTv/playlist.m3u8
 #EXTINF:-1 tvg-name="GO-TV Channel" tvg-logo="https://i.imgur.com/xgjrAAn.png" tvg-id="GOTVCanale163.it" tvg-country="IT" group-title="Italy",GO-TV Channel
 https://6zklxkbbdw9b-hls-live.mariatvcdn.it/msmotor/2f759512164fc6fe4acbed6a5648993a.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="GS Channel" tvg-logo="https://i.imgur.com/ExfxCRv.png" tvg-country="IT" group-title="Italy",GS Channel
@@ -774,6 +798,8 @@ https://59d7d6f47d7fc.streamlock.net/icarotv/icarotv/playlist.m3u8
 https://5a1178b42cc03.streamlock.net/travel/travel/playlist.m3u8
 #EXTINF:-1 tvg-name="Italia 2 Tv" tvg-logo="https://i.imgur.com/ISbxfY0.png" tvg-id="Italia2TV.it" tvg-country="IT" group-title="Italy",Italia 2 Tv
 https://59d7d6f47d7fc.streamlock.net/italia2/italia2/playlist.m3u8
+#EXTINF:-1 tvg-name="Italia 7" tvg-logo="https://i.imgur.com/YBXkY4w.png" tvg-country="IT" group-title="Italy",Italia 7
+https://streaming.softwarecreation.it/Italia7/Italia7/playlist.m3u8
 #EXTINF:-1 tvg-name="Iunior Tv" tvg-logo="https://i.imgur.com/9jeNlLE.png" tvg-id="IuniorTV.it" tvg-country="IT" group-title="Italy",Iunior Tv
 https://5f22d76e220e1.streamlock.net/iuniortv/iuniortv/playlist.m3u8
 #EXTINF:-1 tvg-name="La Nuova Tv" tvg-logo="https://i.imgur.com/wg8FhdN.png" tvg-country="IT" group-title="Italy",La Nuova Tv
@@ -788,6 +814,8 @@ https://f5842579ff984c1c98d63b8d789673eb.msvdn.net/live/S27391994/HVvPMzy/playli
 https://f5842579ff984c1c98d63b8d789673eb.msvdn.net/live/S47282891/JWjL3xqPf4bX/playlist.m3u8
 #EXTINF:-1 tvg-name="Lab Tv" tvg-logo="https://i.imgur.com/OpRS6Fl.png" tvg-country="IT" group-title="Italy",Lab Tv
 https://customer-yzibk50951uq418a.cloudflarestream.com/a58893dee4b9922a75e41b4ec4243f84/manifest/video.m3u8
+#EXTINF:-1 tvg-name="Lazio Tv" tvg-logo="https://i.imgur.com/DAj5Uwb.png" tvg-country="IT" group-title="Italy",Lazio Tv
+https://streaming.softwarecreation.it/LazioTv/LazioTv/playlist.m3u8
 #EXTINF:-1 tvg-name="Le Cronache Lucane Tv" tvg-logo="https://i.imgur.com/EBY3IZL.jpg" tvg-country="IT" group-title="Italy",Le Cronache Lucane Tv
 http://stucazz.com:8888/hls/cronache.m3u8
 #EXTINF:-1 tvg-name="Lira Tv" tvg-logo="https://i.imgur.com/S0ReVEo.png" tvg-country="IT" group-title="Italy",Lira Tv
@@ -806,8 +834,12 @@ https://5db313b643fd8.streamlock.net:443/MinformoTV/MinformoTV/playlist.m3u8
 https://5f22d76e220e1.streamlock.net/servizio01/servizio01/playlist.m3u8
 #EXTINF:-1 tvg-name="NTI Canale 271" tvg-logo="https://i.imgur.com/zlmcUe0.jpg" tvg-country="IT" group-title="Italy",NTI Canale 271
 https://www.ntimedia.it/video/S0B/S0B_master.m3u8
+#EXTINF:-1 tvg-name="Nuova Tv 1" tvg-logo="https://i.imgur.com/1yqTZhR.png" tvg-country="IT" group-title="Italy",Nuova Tv 1
+https://nuovatv.net:8443/tv/stream.m3u8
 #EXTINF:-1 tvg-name="Nuvola Tv" tvg-logo="https://i.imgur.com/EDGez2x.png" tvg-country="IT" group-title="Italy",Nuvola Tv
 https://stream.nuvola.tv:8181/memfs/4aaa6328-1879-4ebf-b18a-498146d0c61c.m3u8
+#EXTINF:-1 tvg-name="Odeon 24" tvg-logo="https://i.imgur.com/M1tVBuH.png" tvg-country="IT" group-title="Italy",Odeon 24
+https://streaming.softwarecreation.it/Odeon/Odeon/manifest.m3u8
 #EXTINF:-1 tvg-name="Onda Novara Tv" tvg-logo="https://i.imgur.com/Qoh9CFy.png" tvg-country="IT" group-title="Italy",Onda Novara Tv
 https://585b674743bbb.streamlock.net/9006/9006/playlist.m3u8
 #EXTINF:-1 tvg-name="Onda Tv Sicilia" tvg-logo="https://i.imgur.com/0c5Y6lr.png" tvg-country="IT" group-title="Italy",Onda Tv Sicilia
@@ -928,6 +960,8 @@ https://59d39900ebfb8.streamlock.net/SuperJtv/SuperJtv/playlist.m3u8
 https://5db313b643fd8.streamlock.net/SUPERSIXLombardia/SUPERSIXLombardia/playlist.m3u8
 #EXTINF:-1 tvg-name="Supertv" tvg-logo="https://i.imgur.com/7gUZcEh.png" tvg-country="IT" group-title="Italy",Supertv
 http://wms.shared.streamshow.it:1935/supertv/supertv/live.m3u8
+#EXTINF:-1 tvg-name="T9" tvg-logo="https://i.imgur.com/XzL05Py.png" tvg-country="IT" group-title="Italy",T9
+https://streaming.softwarecreation.it/tnove/tnove/playlist.m3u8
 #EXTINF:-1 tvg-name="TRC Santeramo" tvg-logo="https://i.imgur.com/VbYdS8P.jpg" tvg-country="IT" group-title="Italy",TRC Santeramo
 https://stream7.livinlive.it/trc/trc/playlist.m3u8
 #EXTINF:-1 tvg-name="TRL Tele Radio Leo" tvg-logo="https://i.imgur.com/qAagkJT.png" tvg-country="IT" group-title="Italy",TRL Tele Radio Leo
@@ -1000,6 +1034,8 @@ https://64b16f23efbee.streamlock.net/telecitypiemonte/telecitypiemonte/playlist.
 https://64b16f23efbee.streamlock.net/telecityvda/telecityvda/playlist.m3u8
 #EXTINF:-1 tvg-name="Telegenova" tvg-logo="https://i.imgur.com/D6HC0So.png" tvg-country="IT" group-title="Italy",Telegenova
 https://64b16f23efbee.streamlock.net/telegenova/telegenova/playlist.m3u8
+#EXTINF:-1 tvg-name="Teleitalia 41" tvg-logo="https://i.imgur.com/lTuPSOn.png" tvg-country="IT" group-title="Italy",Teleitalia 41
+https://streaming.softwarecreation.it/teleitalia/teleitalia/playlist.m3u8
 #EXTINF:-1 tvg-name="Teleleonessa" tvg-logo="https://i.imgur.com/jq3etlV.png" tvg-country="IT" group-title="Italy",Teleleonessa
 http://wms.shared.streamshow.it:1935/teleleonessa/teleleonessa/live.m3u8
 #EXTINF:-1 tvg-name="TeleMajg" tvg-logo="https://i.imgur.com/9tefonp.jpg" tvg-country="IT" group-title="Italy",TeleMajg
@@ -1008,6 +1044,8 @@ https://59d7d6f47d7fc.streamlock.net/telemajg/telemajg/playlist.m3u8
 https://64b16f23efbee.streamlock.net/telenova/telenova/playlist.m3u8
 #EXTINF:-1 tvg-name="Telerama" tvg-logo="https://i.imgur.com/enfqUlI.jpg" tvg-country="IT" group-title="Italy",Telerama
 https://58d921499d3d3.streamlock.net/TeleRama/livestream/playlist.m3u8
+#EXTINF:-1 tvg-name="TeleRegione" tvg-logo="https://i.imgur.com/i5WozUP.png" tvg-country="IT" group-title="Italy",TeleRegione
+https://streaming.softwarecreation.it/TR118/TR118/playlist.m3u8
 #EXTINF:-1 tvg-name="Teleromagna" tvg-logo="https://i.imgur.com/4jWadI8.png" tvg-country="IT" group-title="Italy",Teleromagna
 https://livetr.teleromagna.it/teleromagna/live/playlist.m3u8
 #EXTINF:-1 tvg-name="Teleromagna 24" tvg-logo="https://i.imgur.com/Bpml478.png" tvg-country="IT" group-title="Italy",Teleromagna 24
@@ -1030,6 +1068,8 @@ https://diretta.arcapuglia.it:8080/live/teleluna/index.m3u8
 https://live.mariatvcdn.com/tvprato/2db0dd5674586686a867ec52c3aa8e06.sdp/mono.m3u8
 #EXTINF:-1 tvg-name="Tv Qui Modena" tvg-logo="https://i.imgur.com/4bOYlfg.png" tvg-country="IT" group-title="Italy",Tv Qui Modena
 https://59d7d6f47d7fc.streamlock.net/tvqui/tvqui/playlist.m3u8
+#EXTINF:-1 tvg-name="Tv Yes" tvg-logo="https://i.imgur.com/1wsO8U7.png" tvg-country="IT" group-title="Italy",Tv Yes
+https://stream1.aswifi.it/radioyes/live/index.m3u8
 #EXTINF:-1 tvg-name="Tva Vicenza" tvg-logo="https://i.imgur.com/FtFuPCC.png" tvg-country="IT" group-title="Italy",Tva Vicenza
 http://fms.tvavicenza.it:1935/live/diretta_1/playlist.m3u8
 #EXTINF:-1 tvg-name="Tvrs Tv" tvg-logo="https://i.imgur.com/6p7hTmY.jpg" tvg-country="IT" group-title="Italy",Tvrs Tv
@@ -1040,6 +1080,8 @@ https://umbriatv.stream.rubidia.it:8083/live/umbriatv/playlist.m3u8
 https://a8a02dd9a49a4fc9810743615c65ab73.msvdn.net/live/S76734991/i6NeNqLYaspb/playlist.m3u8
 #EXTINF:-1 tvg-name="Video Mediterraneo" tvg-logo="https://i.imgur.com/hJHC3uQ.png" tvg-country="IT" group-title="Italy",Video Mediterraneo
 https://bfbe5f347ac4424faf719dda285bc39e.msvdn.net/live/S54897858/4gWO7tTzpK3N/playlist.m3u8
+#EXTINF:-1 tvg-name="Video Nola" tvg-logo="https://i.imgur.com/M5z5UoD.jpg" tvg-country="IT" group-title="Italy",Video Nola
+https://videonola.aswifi.it/videonolaabr/live.m3u8
 #EXTINF:-1 tvg-name="Video Regione Sicilia" tvg-logo="https://i.imgur.com/0szwnR3.png" tvg-country="IT" group-title="Italy",Video Regione Sicilia
 https://57214cb172d84f8cb311b91513952b03.msvdn.net/live/S40896499/ZuaLjACsWIL4/playlist.m3u8
 #EXTINF:-1 tvg-name="Videonovara" tvg-logo="https://i.imgur.com/NnO7E5I.png" tvg-country="IT" group-title="Italy",Videonovara
@@ -1210,8 +1252,6 @@ https://www.youtube.com/euronewsro/live
 https://edge1.1internet.tv/dash-live2/streams/1tv-dvr/1tvdash.mpd
 #EXTINF:-1 tvg-name="Россия 1" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Russia-1.svg/1024px-Russia-1.svg.png" tvg-id="Russia1.ru" tvg-chno="2" tvg-country="RU" group-title="Russia",Россия 1
 https://player.smotrim.ru/iframe/stream/live_id/2961
-#EXTINF:-1 tvg-name="Россия-Культура Ⓢ" tvg-logo="https://i.imgur.com/S12gaLc.png" tvg-id="RussiaK.ru" tvg-chno="6" tvg-country="RU" group-title="Russia",Россия-Культура Ⓢ
-https://player.smotrim.ru/iframe/stream/live_id/19201
 #EXTINF:-1 tvg-name="Россия-24 Ⓢ" tvg-logo="https://i.imgur.com/tpqsFzm.png" tvg-id="Russia24.ru" tvg-chno="7" tvg-country="RU" group-title="Russia",Россия-24 Ⓢ
 https://player.smotrim.ru/iframe/stream/live_id/21
 #EXTINF:-1 tvg-name="Карусель Ⓢ" tvg-logo="https://i.imgur.com/4fFMlVq.png" tvg-id="Karusel.ru" tvg-chno="8" tvg-country="RU" group-title="Russia",Карусель Ⓢ
@@ -1300,6 +1340,8 @@ https://sktv.mxnticek.eu/new/stream.php?ch=JOJ%20Plus
 https://sktv.mxnticek.eu/new/stream.php?ch=Wau
 #EXTINF:-1 tvg-name="JOJ 24" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/slovakia/joj-24-sk.png" tvg-id="JOJ24.sk" tvg-chno="10" tvg-country="SK" group-title="Slovakia",JOJ 24
 https://sktv.mxnticek.eu/new/stream.php?ch=JOJ%2024
+#EXTINF:-1 tvg-name="JOJ Šport" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/slovakia/joj-sport-sk.png" tvg-id="JOJSport.sk" tvg-chno="11" tvg-country="SK" group-title="Slovakia",JOJ Šport
+https://sktv.mxnticek.eu/new/stream.php?ch=JOJ%20%C5%A0port
 #EXTINF:-1 tvg-name="Jojko" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/slovakia/jojko-sk.png" tvg-id="Jojko.sk" tvg-chno="12" tvg-country="SK" group-title="Slovakia",Jojko
 https://sktv.mxnticek.eu/new/stream.php?ch=Jojko
 #EXTINF:-1 tvg-name="Jednotka" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/slovakia/jednotka-sk.png" tvg-id="STV1.sk" tvg-chno="13" tvg-country="SK" group-title="Slovakia",Jednotka
@@ -2192,6 +2234,16 @@ https://jmp2.uk/plu-62fb9844db5a4a0007ebc2a3.m3u8
 https://jmp2.uk/plu-687ff00ff6bc08130f16ab81.m3u8
 #EXTINF:-1 channel-id="6661f11a41af6400080e90d8-us" tvg-id="6661f11a41af6400080e90d8" tvg-chno="1940" tvg-name="Big Brother" tvg-logo="https://images.pluto.tv/channels/6661f11a41af6400080e90d8/colorLogoPNG.png" group-title="United States",Big Brother
 https://jmp2.uk/plu-6661f11a41af6400080e90d8.m3u8
+#EXTINF:-1 channel-id="64a765c04ea480000823917a-us" tvg-id="64a765c04ea480000823917a" tvg-chno="1835" tvg-name="Big Brother Camera 1" tvg-logo="https://images.pluto.tv/channels/64a765c04ea480000823917a/colorLogoPNG_1749506871042.png" group-title="United States",Big Brother Camera 1
+https://jmp2.uk/plu-64a765c04ea480000823917a.m3u8
+#EXTINF:-1 channel-id="64a765fb798def0008734632-us" tvg-id="64a765fb798def0008734632" tvg-chno="1840" tvg-name="Big Brother Camera 2" tvg-logo="https://images.pluto.tv/channels/64a765fb798def0008734632/colorLogoPNG_1749507013773.png" group-title="United States",Big Brother Camera 2
+https://jmp2.uk/plu-64a765fb798def0008734632.m3u8
+#EXTINF:-1 channel-id="64a7665b902f2300085d7901-us" tvg-id="64a7665b902f2300085d7901" tvg-chno="1845" tvg-name="Big Brother Camera 3" tvg-logo="https://images.pluto.tv/channels/64a7665b902f2300085d7901/colorLogoPNG_1749507197432.png" group-title="United States",Big Brother Camera 3
+https://jmp2.uk/plu-64a7665b902f2300085d7901.m3u8
+#EXTINF:-1 channel-id="64a766a794635e0008626601-us" tvg-id="64a766a794635e0008626601" tvg-chno="1850" tvg-name="Big Brother Camera 4" tvg-logo="https://images.pluto.tv/channels/64a766a794635e0008626601/colorLogoPNG_1749507400605.png" group-title="United States",Big Brother Camera 4
+https://jmp2.uk/plu-64a766a794635e0008626601.m3u8
+#EXTINF:-1 channel-id="64a766cd798def0008734695-us" tvg-id="64a766cd798def0008734695" tvg-chno="1830" tvg-name="Big Brother Quad View" tvg-logo="https://images.pluto.tv/channels/64a766cd798def0008734695/colorLogoPNG_1752489905508.png" group-title="United States",Big Brother Quad View
+https://jmp2.uk/plu-64a766cd798def0008734695.m3u8
 #EXTINF:-1 channel-id="686d61503484d6073283059d-us" tvg-id="686d61503484d6073283059d" tvg-chno="327" tvg-name="Black Family Sitcoms" tvg-logo="https://images.pluto.tv/channels/686d61503484d6073283059d/colorLogoPNG_1752619670829.png" group-title="United States",Black Family Sitcoms
 https://jmp2.uk/plu-686d61503484d6073283059d.m3u8
 #EXTINF:-1 channel-id="5d51e2bceca5b4b2c0e06c50-us" tvg-id="5d51e2bceca5b4b2c0e06c50" tvg-chno="1680" tvg-name="Black Ink Crew" tvg-logo="https://images.pluto.tv/channels/5d51e2bceca5b4b2c0e06c50/colorLogoPNG_1731835399139.png" group-title="United States",Black Ink Crew
@@ -2212,8 +2264,6 @@ https://jmp2.uk/plu-61b3b8c645b45d0007a9bb8d.m3u8
 https://jmp2.uk/plu-66588931a3865300085ca800.m3u8
 #EXTINF:-1 channel-id="68e9913c4a666b9054849832-us" tvg-id="68e9913c4a666b9054849832" tvg-chno="797" tvg-name="Bonanza" tvg-logo="https://images.pluto.tv/channels/68e9913c4a666b9054849832/colorLogoPNG_1762379692322.png" group-title="United States",Bonanza
 https://jmp2.uk/plu-68e9913c4a666b9054849832.m3u8
-#EXTINF:-1 channel-id="696e647b07ea70192d49f6a5-ca" tvg-id="696e647b07ea70192d49f6a5" tvg-chno="355" tvg-name="Bonanza" tvg-logo="https://images.pluto.tv/channels/696e647b07ea70192d49f6a5/colorLogoPNG_1768842647658.png" group-title="Canada",Bonanza
-https://jmp2.uk/plu-696e647b07ea70192d49f6a5.m3u8
 #EXTINF:-1 channel-id="660be37e7bcd860008793a6a-gb" tvg-id="660be37e7bcd860008793a6a" tvg-chno="708" tvg-name="Bondi Rescue" tvg-logo="https://images.pluto.tv/channels/660be37e7bcd860008793a6a/colorLogoPNG.png" group-title="United Kingdom",Bondi Rescue
 https://jmp2.uk/plu-660be37e7bcd860008793a6a.m3u8
 #EXTINF:-1 channel-id="66166989635c7500084105a2-ca" tvg-id="66166989635c7500084105a2" tvg-chno="780" tvg-name="Bondi Rescue" tvg-logo="https://images.pluto.tv/channels/66166989635c7500084105a2/colorLogoPNG.png" group-title="Canada",Bondi Rescue
@@ -2564,12 +2614,12 @@ https://jmp2.uk/plu-62e90e8cb05d2b0007f10a61.m3u8
 https://jmp2.uk/plu-60faf9ddfcc1f200070a5932.m3u8
 #EXTINF:-1 channel-id="677f927554f43dad4b3258aa-ca" tvg-id="677f927554f43dad4b3258aa" tvg-chno="1250" tvg-name="Garfield and Friends" tvg-logo="https://images.pluto.tv/channels/677f927554f43dad4b3258aa/colorLogoPNG.png" group-title="Canada",Garfield and Friends
 https://jmp2.uk/plu-677f927554f43dad4b3258aa.m3u8
+#EXTINF:-1 channel-id="65c4960d11ced7000812c433-gb" tvg-id="65c4960d11ced7000812c433" tvg-chno="601" tvg-name="Geordie Shore" tvg-logo="https://images.pluto.tv/channels/65c4960d11ced7000812c433/colorLogoPNG.png" group-title="United Kingdom",Geordie Shore
+https://jmp2.uk/plu-65c4960d11ced7000812c433.m3u8
 #EXTINF:-1 channel-id="64e561a4354251000823a0e0-us" tvg-id="64e561a4354251000823a0e0" tvg-chno="1550" tvg-name="Ghost Hunters" tvg-logo="https://images.pluto.tv/channels/64e561a4354251000823a0e0/colorLogoPNG.png" group-title="United States",Ghost Hunters
 https://jmp2.uk/plu-64e561a4354251000823a0e0.m3u8
 #EXTINF:-1 channel-id="5f27bbe4779de70007a6d1c1-gb" tvg-id="5f27bbe4779de70007a6d1c1" tvg-chno="402" tvg-name="Ghost Hunters" tvg-logo="https://images.pluto.tv/channels/5f27bbe4779de70007a6d1c1/colorLogoPNG.png" group-title="United Kingdom",Ghost Hunters
 https://jmp2.uk/plu-5f27bbe4779de70007a6d1c1.m3u8
-#EXTINF:-1 channel-id="65cf8ace332fec00081e7ea2-ca" tvg-id="65cf8ace332fec00081e7ea2" tvg-chno="590" tvg-name="Ghost Hunters" tvg-logo="https://images.pluto.tv/channels/65cf8ace332fec00081e7ea2/colorLogoPNG.png" group-title="Canada",Ghost Hunters
-https://jmp2.uk/plu-65cf8ace332fec00081e7ea2.m3u8
 #EXTINF:-1 channel-id="6a2b0e66c2b638404f0a4ffb-us" tvg-id="6a2b0e66c2b638404f0a4ffb" tvg-chno="860" tvg-name="Ghost Whisperer" tvg-logo="https://images.pluto.tv/channels/6a2b0e66c2b638404f0a4ffb/colorLogoPNG_1782946863231.png" group-title="United States",Ghost Whisperer
 https://jmp2.uk/plu-6a2b0e66c2b638404f0a4ffb.m3u8
 #EXTINF:-1 channel-id="66ba1e4446762a000855cd87-gb" tvg-id="66ba1e4446762a000855cd87" tvg-chno="304" tvg-name="Girlfriends" tvg-logo="https://images.pluto.tv/channels/66ba1e4446762a000855cd87/colorLogoPNG.png" group-title="United Kingdom",Girlfriends
@@ -2724,6 +2774,8 @@ https://jmp2.uk/plu-5db0ad56edc89300090d2ebb.m3u8
 https://jmp2.uk/plu-62f4f414c2ba130007f8b24e.m3u8
 #EXTINF:-1 channel-id="62fb66c867976d0007647e54-ca" tvg-id="62fb66c867976d0007647e54" tvg-chno="850" tvg-name="Kitchen Battles" tvg-logo="https://images.pluto.tv/channels/62fb66c867976d0007647e54/colorLogoPNG.png" group-title="Canada",Kitchen Battles
 https://jmp2.uk/plu-62fb66c867976d0007647e54.m3u8
+#EXTINF:-1 channel-id="60fb01a24795a6000762fe83-us" tvg-id="60fb01a24795a6000762fe83" tvg-chno="3830" tvg-name="LEGO Kids TV" tvg-logo="https://images.pluto.tv/channels/60fb01a24795a6000762fe83/colorLogoPNG.png" group-title="United States",LEGO Kids TV
+https://jmp2.uk/plu-60fb01a24795a6000762fe83.m3u8
 #EXTINF:-1 channel-id="668c566d08d5490008075948-us" tvg-id="668c566d08d5490008075948" tvg-chno="4335" tvg-name="La Familia del Barrio" tvg-logo="https://images.pluto.tv/channels/668c566d08d5490008075948/colorLogoPNG.png" group-title="United States",La Familia del Barrio
 https://jmp2.uk/plu-668c566d08d5490008075948.m3u8
 #EXTINF:-1 channel-id="68758038552299d2b08162e3-us" tvg-id="68758038552299d2b08162e3" tvg-chno="995" tvg-name="Law & Order" tvg-logo="https://images.pluto.tv/channels/68758038552299d2b08162e3/colorLogoPNG_1754039420438.png" group-title="United States",Law & Order
@@ -3064,8 +3116,6 @@ https://jmp2.uk/plu-693adae77f21340ef9746f56.m3u8
 https://jmp2.uk/plu-5dc3fc6b9133f500099c7d98.m3u8
 #EXTINF:-1 channel-id="5b64a245a202b3337f09e51d-us" tvg-id="5b64a245a202b3337f09e51d" tvg-chno="45" tvg-name="Pluto TV Fantastic" tvg-logo="https://images.pluto.tv/channels/5b64a245a202b3337f09e51d/colorLogoPNG_1756834917957.png" group-title="United States",Pluto TV Fantastic
 https://jmp2.uk/plu-5b64a245a202b3337f09e51d.m3u8
-#EXTINF:-1 channel-id="685041d936c9361b1921c26c-gb" tvg-id="685041d936c9361b1921c26c" tvg-chno="287" tvg-name="Pluto TV Fantasy & Horror" tvg-logo="https://images.pluto.tv/channels/685041d936c9361b1921c26c/colorLogoPNG_1753696741486.png" group-title="United Kingdom",Pluto TV Fantasy & Horror
-https://jmp2.uk/plu-685041d936c9361b1921c26c.m3u8
 #EXTINF:-1 channel-id="69fa471bc2b638404ffa91bf-us" tvg-id="69fa471bc2b638404ffa91bf" tvg-chno="27" tvg-name="Pluto TV Fireworks" tvg-logo="https://images.pluto.tv/channels/69fa471bc2b638404ffa91bf/colorLogoPNG_1781130983128.png" group-title="United States",Pluto TV Fireworks
 https://jmp2.uk/plu-69fa471bc2b638404ffa91bf.m3u8
 #EXTINF:-1 channel-id="5ddf930548ff9b00090d5686-gb" tvg-id="5ddf930548ff9b00090d5686" tvg-chno="830" tvg-name="Pluto TV Food" tvg-logo="https://images.pluto.tv/channels/5ddf930548ff9b00090d5686/colorLogoPNG.png" group-title="United Kingdom",Pluto TV Food
@@ -4006,8 +4056,6 @@ https://jmp2.uk/plu-6231e909bc960f00075d8e7c.m3u8
 https://jmp2.uk/plu-6231e9b7f6deff00074674f4.m3u8
 #EXTINF:-1 channel-id="61e82af27027f9000753c6e4-dk" tvg-id="61e82af27027f9000753c6e4" tvg-chno="931" tvg-name="CBS News 24/7" tvg-logo="https://images.pluto.tv/channels/61e82af27027f9000753c6e4/colorLogoPNG.png" group-title="Denmark",CBS News 24/7
 https://jmp2.uk/plu-61e82af27027f9000753c6e4.m3u8
-#EXTINF:-1 channel-id="5d4947590ba40f75dc29c26b-de" tvg-id="5d4947590ba40f75dc29c26b" tvg-chno="67" tvg-name="CC Pluto TV" tvg-logo="https://images.pluto.tv/channels/5d4947590ba40f75dc29c26b/colorLogoPNG.png" group-title="Germany",CC Pluto TV
-https://jmp2.uk/plu-5d4947590ba40f75dc29c26b.m3u8
 #EXTINF:-1 channel-id="66c45c0de7f5e80008b82005-es" tvg-id="66c45c0de7f5e80008b82005" tvg-chno="602" tvg-name="CNN Headlines International" tvg-logo="https://images.pluto.tv/channels/66c45c0de7f5e80008b82005/colorLogoPNG_1775159727857.png" group-title="Spain",CNN Headlines International
 https://jmp2.uk/plu-66c45c0de7f5e80008b82005.m3u8
 #EXTINF:-1 channel-id="66337e365a402e00087eccaf-de" tvg-id="66337e365a402e00087eccaf" tvg-chno="523" tvg-name="CNN Headlines International" tvg-logo="https://images.pluto.tv/channels/66337e365a402e00087eccaf/colorLogoPNG_1775159594177.png" group-title="Germany",CNN Headlines International
@@ -4082,8 +4130,6 @@ https://jmp2.uk/plu-6578843432c1b300089a9a98.m3u8
 https://jmp2.uk/plu-65788727a620e30008fe4d88.m3u8
 #EXTINF:-1 channel-id="65788076b228b7000843fc9a-dk" tvg-id="65788076b228b7000843fc9a" tvg-chno="475" tvg-name="Celeb Reality" tvg-logo="https://images.pluto.tv/channels/65788076b228b7000843fc9a/colorLogoPNG.png" group-title="Denmark",Celeb Reality
 https://jmp2.uk/plu-65788076b228b7000843fc9a.m3u8
-#EXTINF:-1 channel-id="60afbad343e3840007164348-de" tvg-id="60afbad343e3840007164348" tvg-chno="66" tvg-name="Chaos City" tvg-logo="https://images.pluto.tv/channels/60afbad343e3840007164348/colorLogoPNG.png" group-title="Germany",Chaos City
-https://jmp2.uk/plu-60afbad343e3840007164348.m3u8
 #EXTINF:-1 channel-id="65e977a618036500082ec972-no" tvg-id="65e977a618036500082ec972" tvg-chno="912" tvg-name="Chappelle's Show" tvg-logo="https://images.pluto.tv/channels/65e977a618036500082ec972/colorLogoPNG.png" group-title="Norway",Chappelle's Show
 https://jmp2.uk/plu-65e977a618036500082ec972.m3u8
 #EXTINF:-1 channel-id="65e9783b0d456100082d9e05-se" tvg-id="65e9783b0d456100082d9e05" tvg-chno="962" tvg-name="Chappelle's Show" tvg-logo="https://images.pluto.tv/channels/65e9783b0d456100082d9e05/colorLogoPNG.png" group-title="Sweden",Chappelle's Show
@@ -4202,8 +4248,6 @@ https://jmp2.uk/plu-6426a821a3ade7000800031c.m3u8
 https://jmp2.uk/plu-64ddcbb14c5ed80008fad416.m3u8
 #EXTINF:-1 channel-id="699769fa19ac123965833fd3-mx" tvg-id="699769fa19ac123965833fd3" tvg-chno="307" tvg-name="Cuando los Ángeles Caen" tvg-logo="https://images.pluto.tv/channels/699769fa19ac123965833fd3/colorLogoPNG_1773786938217.png" group-title="Mexico",Cuando los Ángeles Caen
 https://jmp2.uk/plu-699769fa19ac123965833fd3.m3u8
-#EXTINF:-1 channel-id="5f1acd36779de70007a680d1-es" tvg-id="5f1acd36779de70007a680d1" tvg-chno="56" tvg-name="Curro Jiménez" tvg-logo="https://images.pluto.tv/channels/5f1acd36779de70007a680d1/colorLogoPNG.png" group-title="Spain",Curro Jiménez
-https://jmp2.uk/plu-5f1acd36779de70007a680d1.m3u8
 #EXTINF:-1 channel-id="64b67f0424ade50008a3be17-de" tvg-id="64b67f0424ade50008a3be17" tvg-chno="90" tvg-name="DAZN Darts x Pluto TV" tvg-logo="https://images.pluto.tv/channels/64b67f0424ade50008a3be17/colorLogoPNG.png" group-title="Germany",DAZN Darts x Pluto TV
 https://jmp2.uk/plu-64b67f0424ade50008a3be17.m3u8
 #EXTINF:-1 channel-id="64afe50c5dc16600087f3227-de" tvg-id="64afe50c5dc16600087f3227" tvg-chno="97" tvg-name="DAZN Heldinnen x Pluto TV" tvg-logo="https://images.pluto.tv/channels/64afe50c5dc16600087f3227/colorLogoPNG.png" group-title="Germany",DAZN Heldinnen x Pluto TV
@@ -4974,6 +5018,8 @@ https://jmp2.uk/plu-5f6108d8cc331900075e98e4.m3u8
 https://jmp2.uk/plu-6047fbdbbb776a0007e7f2ff.m3u8
 #EXTINF:-1 channel-id="6047fabfce6e8e00070bcc9f-mx" tvg-id="6047fabfce6e8e00070bcc9f" tvg-chno="1502" tvg-name="MTV Biggest Pop" tvg-logo="https://images.pluto.tv/channels/6047fabfce6e8e00070bcc9f/colorLogoPNG.png" group-title="Mexico",MTV Biggest Pop
 https://jmp2.uk/plu-6047fabfce6e8e00070bcc9f.m3u8
+#EXTINF:-1 channel-id="5f92b56a367e170007cd43f4-fr" tvg-id="5f92b56a367e170007cd43f4" tvg-chno="740" tvg-name="MTV CLASSICS" tvg-logo="https://images.pluto.tv/channels/5f92b56a367e170007cd43f4/colorLogoPNG.png" group-title="France",MTV CLASSICS
+https://jmp2.uk/plu-5f92b56a367e170007cd43f4.m3u8
 #EXTINF:-1 channel-id="626c2a3502d84a0007cec817-br" tvg-id="626c2a3502d84a0007cec817" tvg-chno="397" tvg-name="MTV Catfish" tvg-logo="https://images.pluto.tv/channels/626c2a3502d84a0007cec817/colorLogoPNG.png" group-title="Brazil",MTV Catfish
 https://jmp2.uk/plu-626c2a3502d84a0007cec817.m3u8
 #EXTINF:-1 channel-id="625461ef01f27a0007976ad1-mx" tvg-id="625461ef01f27a0007976ad1" tvg-chno="397" tvg-name="MTV Catfish" tvg-logo="https://images.pluto.tv/channels/625461ef01f27a0007976ad1/colorLogoPNG.png" group-title="Mexico",MTV Catfish
@@ -5002,14 +5048,10 @@ https://jmp2.uk/plu-638693db857364000781b471.m3u8
 https://jmp2.uk/plu-645111f1d8436e00081bb2bd.m3u8
 #EXTINF:-1 channel-id="64510d3ad3fdde00080951f2-mx" tvg-id="64510d3ad3fdde00080951f2" tvg-chno="383" tvg-name="MTV Drag" tvg-logo="https://images.pluto.tv/channels/64510d3ad3fdde00080951f2/colorLogoPNG.png" group-title="Mexico",MTV Drag
 https://jmp2.uk/plu-64510d3ad3fdde00080951f2.m3u8
-#EXTINF:-1 channel-id="5f98537a5a4341000733aefe-es" tvg-id="5f98537a5a4341000733aefe" tvg-chno="657" tvg-name="MTV Embarazada a los 16" tvg-logo="https://images.pluto.tv/channels/5f98537a5a4341000733aefe/colorLogoPNG.png" group-title="Spain",MTV Embarazada a los 16
-https://jmp2.uk/plu-5f98537a5a4341000733aefe.m3u8
 #EXTINF:-1 channel-id="62b218fc511d4b00070ddc0c-mx" tvg-id="62b218fc511d4b00070ddc0c" tvg-chno="1507" tvg-name="MTV Flow Latino" tvg-logo="https://images.pluto.tv/channels/62b218fc511d4b00070ddc0c/colorLogoPNG.png" group-title="Mexico",MTV Flow Latino
 https://jmp2.uk/plu-62b218fc511d4b00070ddc0c.m3u8
 #EXTINF:-1 channel-id="627d3176d7dfa500077042f1-es" tvg-id="627d3176d7dfa500077042f1" tvg-chno="653" tvg-name="MTV Geordies" tvg-logo="https://images.pluto.tv/channels/627d3176d7dfa500077042f1/colorLogoPNG.png" group-title="Spain",MTV Geordies
 https://jmp2.uk/plu-627d3176d7dfa500077042f1.m3u8
-#EXTINF:-1 channel-id="62ac3d7dc23b400008ae5b5a-es" tvg-id="62ac3d7dc23b400008ae5b5a" tvg-chno="651" tvg-name="MTV Jerseys" tvg-logo="https://images.pluto.tv/channels/62ac3d7dc23b400008ae5b5a/colorLogoPNG.png" group-title="Spain",MTV Jerseys
-https://jmp2.uk/plu-62ac3d7dc23b400008ae5b5a.m3u8
 #EXTINF:-1 channel-id="620fdc7d8a36fc000710e3ba-br" tvg-id="620fdc7d8a36fc000710e3ba" tvg-chno="395" tvg-name="MTV Jovens e Mães" tvg-logo="https://images.pluto.tv/channels/620fdc7d8a36fc000710e3ba/colorLogoPNG.png" group-title="Brazil",MTV Jovens e Mães
 https://jmp2.uk/plu-620fdc7d8a36fc000710e3ba.m3u8
 #EXTINF:-1 channel-id="63988b61c8d285000798a22a-br" tvg-id="63988b61c8d285000798a22a" tvg-chno="401" tvg-name="MTV Just Tattoo of Us" tvg-logo="https://images.pluto.tv/channels/63988b61c8d285000798a22a/colorLogoPNG.png" group-title="Brazil",MTV Just Tattoo of Us
@@ -5106,7 +5148,7 @@ https://jmp2.uk/plu-681110afc188aa63faa147e0.m3u8
 https://jmp2.uk/plu-69fcaa71ea95ffff0987f555.m3u8
 #EXTINF:-1 channel-id="61c19edbf535220007075c4e-dk" tvg-id="61c19edbf535220007075c4e" tvg-chno="551" tvg-name="MasterChef Danmarks største madtalenter" tvg-logo="https://images.pluto.tv/channels/61c19edbf535220007075c4e/colorLogoPNG.png" group-title="Denmark",MasterChef Danmarks største madtalenter
 https://jmp2.uk/plu-61c19edbf535220007075c4e.m3u8
-#EXTINF:-1 channel-id="5e3ddbd27091820009f86dd9-mx" tvg-id="5e3ddbd27091820009f86dd9" tvg-chno="435" tvg-name="MasterChef México" tvg-logo="https://images.pluto.tv/channels/5e3ddbd27091820009f86dd9/colorLogoPNG_1780939055727.png" group-title="Mexico",MasterChef México
+#EXTINF:-1 channel-id="5e3ddbd27091820009f86dd9-mx" tvg-id="5e3ddbd27091820009f86dd9" tvg-chno="435" tvg-name="MasterChef México" tvg-logo="https://images.pluto.tv/channels/5e3ddbd27091820009f86dd9/colorLogoPNG_1783712159843.png" group-title="Mexico",MasterChef México
 https://jmp2.uk/plu-5e3ddbd27091820009f86dd9.m3u8
 #EXTINF:-1 channel-id="66290b7523e24f000832cc17-no" tvg-id="66290b7523e24f000832cc17" tvg-chno="608" tvg-name="Matlock" tvg-logo="https://images.pluto.tv/channels/66290b7523e24f000832cc17/colorLogoPNG.png" group-title="Norway",Matlock
 https://jmp2.uk/plu-66290b7523e24f000832cc17.m3u8
@@ -5114,6 +5156,8 @@ https://jmp2.uk/plu-66290b7523e24f000832cc17.m3u8
 https://jmp2.uk/plu-66290c12801af8000850c1a9.m3u8
 #EXTINF:-1 channel-id="66290a779e68c20008a18cf3-dk" tvg-id="66290a779e68c20008a18cf3" tvg-chno="604" tvg-name="Matlock" tvg-logo="https://images.pluto.tv/channels/66290a779e68c20008a18cf3/colorLogoPNG.png" group-title="Denmark",Matlock
 https://jmp2.uk/plu-66290a779e68c20008a18cf3.m3u8
+#EXTINF:-1 channel-id="6888928eb52fb742416673d2-es" tvg-id="6888928eb52fb742416673d2" tvg-chno="521" tvg-name="Mattel Junior" tvg-logo="https://images.pluto.tv/channels/6888928eb52fb742416673d2/colorLogoPNG_1765806188472.png" group-title="Spain",Mattel Junior
+https://jmp2.uk/plu-6888928eb52fb742416673d2.m3u8
 #EXTINF:-1 channel-id="686e74b0e48af72bc266e798-fr" tvg-id="686e74b0e48af72bc266e798" tvg-chno="1008" tvg-name="Mattel Junior" tvg-logo="https://images.pluto.tv/channels/686e74b0e48af72bc266e798/colorLogoPNG_1765806081318.png" group-title="France",Mattel Junior
 https://jmp2.uk/plu-686e74b0e48af72bc266e798.m3u8
 #EXTINF:-1 channel-id="686cfe983ffa5e0c91cdb5df-it" tvg-id="686cfe983ffa5e0c91cdb5df" tvg-chno="750" tvg-name="Mattel Junior" tvg-logo="https://images.pluto.tv/channels/686cfe983ffa5e0c91cdb5df/colorLogoPNG_1765897494203.png" group-title="Italy",Mattel Junior
@@ -5510,6 +5554,8 @@ https://jmp2.uk/plu-5f1ac947dcd00d0007937c08.m3u8
 https://jmp2.uk/plu-5f1210d14ae1f80007bafb1d.m3u8
 #EXTINF:-1 channel-id="5dcddfcb229eff00091b6bdf-mx" tvg-id="5dcddfcb229eff00091b6bdf" tvg-chno="36" tvg-name="Pluto TV Cine Drama" tvg-logo="https://images.pluto.tv/channels/5dcddfcb229eff00091b6bdf/colorLogoPNG_1765466087404.png" group-title="Mexico",Pluto TV Cine Drama
 https://jmp2.uk/plu-5dcddfcb229eff00091b6bdf.m3u8
+#EXTINF:-1 channel-id="5f1ac1f1b66c76000790ef27-es" tvg-id="5f1ac1f1b66c76000790ef27" tvg-chno="208" tvg-name="Pluto TV Cine Estelar" tvg-logo="https://images.pluto.tv/channels/5f1ac1f1b66c76000790ef27/colorLogoPNG.png" group-title="Spain",Pluto TV Cine Estelar
+https://jmp2.uk/plu-5f1ac1f1b66c76000790ef27.m3u8
 #EXTINF:-1 channel-id="5dcde437229eff00091b6c30-mx" tvg-id="5dcde437229eff00091b6c30" tvg-chno="18" tvg-name="Pluto TV Cine Estelar" tvg-logo="https://images.pluto.tv/channels/5dcde437229eff00091b6c30/colorLogoPNG_1769014514491.png" group-title="Mexico",Pluto TV Cine Estelar
 https://jmp2.uk/plu-5dcde437229eff00091b6c30.m3u8
 #EXTINF:-1 channel-id="5dd6ddb30a1d8a000908ed4c-mx" tvg-id="5dd6ddb30a1d8a000908ed4c" tvg-chno="90" tvg-name="Pluto TV Cine Familia" tvg-logo="https://images.pluto.tv/channels/5dd6ddb30a1d8a000908ed4c/colorLogoPNG_1782776617815.png" group-title="Mexico",Pluto TV Cine Familia
@@ -5556,8 +5602,6 @@ https://jmp2.uk/plu-67b4b2d976a934282e92d71c.m3u8
 https://jmp2.uk/plu-5f1ef23020a5ac0007e5e8ea.m3u8
 #EXTINF:-1 channel-id="5e7b6c60fd20c50007910bf5-de" tvg-id="5e7b6c60fd20c50007910bf5" tvg-chno="15" tvg-name="Pluto TV Crime" tvg-logo="https://images.pluto.tv/channels/5e7b6c60fd20c50007910bf5/colorLogoPNG.png" group-title="Germany",Pluto TV Crime
 https://jmp2.uk/plu-5e7b6c60fd20c50007910bf5.m3u8
-#EXTINF:-1 channel-id="608aa718a8ec810007d87fee-it" tvg-id="608aa718a8ec810007d87fee" tvg-chno="810" tvg-name="Pluto TV Cucina" tvg-logo="https://images.pluto.tv/channels/608aa718a8ec810007d87fee/colorLogoPNG_1774519163545.png" group-title="Italy",Pluto TV Cucina
-https://jmp2.uk/plu-608aa718a8ec810007d87fee.m3u8
 #EXTINF:-1 channel-id="5f8ed48146ba9e00078424b6-fr" tvg-id="5f8ed48146ba9e00078424b6" tvg-chno="830" tvg-name="Pluto TV Cuisine" tvg-logo="https://images.pluto.tv/channels/5f8ed48146ba9e00078424b6/colorLogoPNG_1733440509319.png" group-title="France",Pluto TV Cuisine
 https://jmp2.uk/plu-5f8ed48146ba9e00078424b6.m3u8
 #EXTINF:-1 channel-id="67d2b814fe36d6e7b1d2318a-dk" tvg-id="67d2b814fe36d6e7b1d2318a" tvg-chno="404" tvg-name="Pluto TV Danske klassikere" tvg-logo="https://images.pluto.tv/channels/67d2b814fe36d6e7b1d2318a/colorLogoPNG.png" group-title="Denmark",Pluto TV Danske klassikere
@@ -6708,8 +6752,6 @@ https://jmp2.uk/plu-6792044b680721c77c5b9ba2.m3u8
 https://jmp2.uk/plu-6683cd0f63a5f20008fb84a3.m3u8
 #EXTINF:-1 channel-id="6304f2e2eb10450007298023-fr" tvg-id="6304f2e2eb10450007298023" tvg-chno="215" tvg-name="Un Village Français" tvg-logo="https://images.pluto.tv/channels/6304f2e2eb10450007298023/colorLogoPNG.png" group-title="France",Un Village Français
 https://jmp2.uk/plu-6304f2e2eb10450007298023.m3u8
-#EXTINF:-1 channel-id="62f3ece7b09fd6000783bfb9-fr" tvg-id="62f3ece7b09fd6000783bfb9" tvg-chno="230" tvg-name="Un gars, une fille" tvg-logo="https://images.pluto.tv/channels/62f3ece7b09fd6000783bfb9/colorLogoPNG.png" group-title="France",Un gars une fille
-https://jmp2.uk/plu-62f3ece7b09fd6000783bfb9.m3u8
 #EXTINF:-1 channel-id="650adc3198020f000862eed4-de" tvg-id="650adc3198020f000862eed4" tvg-chno="263" tvg-name="Unentdeckt – Mörder unter uns" tvg-logo="https://images.pluto.tv/channels/650adc3198020f000862eed4/colorLogoPNG.png" group-title="Germany",Unentdeckt – Mörder unter uns
 https://jmp2.uk/plu-650adc3198020f000862eed4.m3u8
 #EXTINF:-1 channel-id="61c1e1c445b45d0007aad03e-no" tvg-id="61c1e1c445b45d0007aad03e" tvg-chno="416" tvg-name="Unga Mammor" tvg-logo="https://images.pluto.tv/channels/61c1e1c445b45d0007aad03e/colorLogoPNG.png" group-title="Norway",Unga Mammor
@@ -9422,12 +9464,6 @@ https://jmp2.uk/stvp-AT3400004QH
 https://jmp2.uk/stvp-CH340000286
 #EXTINF:-1 channel-id="DE3400003PW-de" tvg-id="DE3400003PW" tvg-chno="4255" tvg-name="Comedy & Shows" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/DE3400003PW_20251013T054848SQUARE.png" group-title="Germany",Comedy & Shows
 https://jmp2.uk/stvp-DE3400003PW
-#EXTINF:-1 channel-id="ATAK3504510A-at" tvg-id="ATAK3504510A" tvg-chno="4160" tvg-name="Comedy Central Pluto TV" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ATAK3504510A_20250107T021602SQUARE.png" group-title="Austria",Comedy Central Pluto TV
-https://jmp2.uk/stvp-ATAK3504510A
-#EXTINF:-1 channel-id="CHAK3504510A-ch" tvg-id="CHAK3504510A" tvg-chno="4160" tvg-name="Comedy Central Pluto TV" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/CHAK3504510A_20250107T025019SQUARE.png" group-title="Switzerland",Comedy Central Pluto TV
-https://jmp2.uk/stvp-CHAK3504510A
-#EXTINF:-1 channel-id="DEAK3504500A-de" tvg-id="DEAK3504500A" tvg-chno="4160" tvg-name="Comedy Central Pluto TV" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/DEAK3504500A_20250107T023845SQUARE.png" group-title="Germany",Comedy Central Pluto TV
-https://jmp2.uk/stvp-DEAK3504500A
 #EXTINF:-1 channel-id="IN3600006RT-in" tvg-id="IN3600006RT" tvg-chno="1204" tvg-name="Comedy King" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/IN3600006RT_20260623T014707SQUARE.png" group-title="India",Comedy King
 https://jmp2.uk/stvp-IN3600006RT
 #EXTINF:-1 channel-id="ATBD41000046O-at" tvg-id="ATBD41000046O" tvg-chno="4007" tvg-name="Comedy Mix" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ATBD41000046O_20260707T045332SQUARE.png" group-title="Austria",Comedy Mix
@@ -9846,11 +9882,3 @@ https://jmp2.uk/stvp-IT500011RG
 https://jmp2.uk/stvp-KR12000017G
 #EXTINF:-1 channel-id="KR2000012AI-kr" tvg-id="KR2000012AI" tvg-chno="518" tvg-name="Genie 액션 특선" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/KR2000012AI_20260708T005634SQUARE.png" group-title="South Korea",Genie 액션 특선
 https://jmp2.uk/stvp-KR2000012AI
-#EXTINF:-1 channel-id="ITBB5000002N0-it" tvg-id="ITBB5000002N0" tvg-chno="4555" tvg-name="Giornale Radio TV" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ITBB5000002N0_20260407T040316SQUARE.png" group-title="Italy",Giornale Radio TV
-https://jmp2.uk/stvp-ITBB5000002N0
-#EXTINF:-1 channel-id="ITBD1100001B7-it" tvg-id="ITBD1100001B7" tvg-chno="4992" tvg-name="Gli immortali – Van Damme vs Lundgren" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ITBD1100001B7_20250715T004408SQUARE.png" group-title="Italy",Gli immortali – Van Damme vs Lundgren
-https://jmp2.uk/stvp-ITBD1100001B7
-#EXTINF:-1 channel-id="IN2400002A3-in" tvg-id="IN2400002A3" tvg-chno="2025" tvg-name="Go Wild" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/IN2400002A3_20260623T014939SQUARE.png" group-title="India",Go Wild
-https://jmp2.uk/stvp-IN2400002A3
-#EXTINF:-1 channel-id="ATAJ0500451A-at" tvg-id="ATAJ0500451A" tvg-chno="4744" tvg-name="GoldStar TV" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ATAJ0500451A_20250506T021110SQUARE.png" group-title="Austria",GoldStar TV
-https://jmp2.uk/stvp-ATAJ0500451A
