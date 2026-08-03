@@ -1,5 +1,5 @@
 #EXTM3U
-# Généré par tools/healthcheck.py — 4906 flux vérifiés vivants. Sources 100% légales (FAST + broadcasters officiels).
+# Généré par tools/healthcheck.py — 4901 flux vérifiés vivants. Sources 100% légales (FAST + broadcasters officiels).
 #EXTINF:-1 tvg-id="NASATV.us" group-title="Officiel",NASA TV
 https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
 #EXTINF:-1 tvg-id="EuronewsEnglish.fr" group-title="Officiel",Euronews English
@@ -96,6 +96,8 @@ https://59959724487e3.streamlock.net/stream/live/playlist.m3u8
 https://parh.rtrs.tv/tv/live/playlist.m3u8
 #EXTINF:-1 tvg-name="RTRS PLUS Ⓢ" tvg-logo="https://i.imgur.com/k06WvYl.png" tvg-id="RTRSplus.ba" tvg-chno="3" tvg-country="BA" group-title="Bosnia and Herzegovina",RTRS PLUS Ⓢ
 https://pluslive.rtrs.tv/plus/plus/playlist.m3u8
+#EXTINF:-1 tvg-name="N1 Bosna i Hercegovina" tvg-logo="https://i.imgur.com/72oMSWz.png" tvg-id="N1BosniaHerzegovina.ba" tvg-chno="4" tvg-country="BA" group-title="Bosnia and Herzegovina",N1 Bosna i Hercegovina
+https://best-str.umn.cdn.united.cloud/stream?channel=n1bos&p=n1Sh4redSecre7iNf0&sp=n1info&stream=sp1400&u=n1info
 #EXTINF:-1 tvg-name="RTV HB Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/en/6/60/Logo_of_TV_Herceg-Bosne.png" tvg-id="RTVHB.ba" tvg-chno="5" tvg-country="BA" group-title="Bosnia and Herzegovina",RTV HB Ⓢ
 https://prd-hometv-live-open.spectar.tv/ERO_1_083/playlist.m3u8
 #EXTINF:-1 tvg-name="RTV BN" tvg-logo="https://i.imgur.com/DUBvfWb.png" tvg-id="BNTV.ba" tvg-chno="6" tvg-country="BA" group-title="Bosnia and Herzegovina",RTV BN
@@ -180,24 +182,26 @@ https://tvjadran.stream.agatin.hr:3412/live/tvjadranlive.m3u8
 https://stream.luci.xyz/hls/LTV.m3u8
 #EXTINF:-1 tvg-name="RIK Sat" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Logo_RIK_Sat_2017.svg/640px-Logo_RIK_Sat_2017.svg.png" tvg-id="RIKSat.cy" tvg-chno="4" tvg-country="CY" group-title="Cyprus",RIK Sat
 https://l3.cloudskep.com/cybcsat/abr/playlist.m3u8
-#EXTINF:-1 tvg-name="ČT24" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct24-cz.png" tvg-id="CT24.cz" tvg-chno="3" tvg-country="CZ" group-title="Czech Republic",ČT24
-https://sktv.mxnticek.eu/new/stream.php?ch=CT24
+#EXTINF:-1 tvg-name="ČT1" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct1-cz.png" tvg-id="CT1.cz" tvg-chno="1" tvg-country="CZ" group-title="Czech Republic",ČT1
+https://sktv.mxnticek.eu/new/stream.php?ch=CT1
 #EXTINF:-1 tvg-name="ČT sport" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct-sport-cz.png" tvg-id="CTSport.cz" tvg-chno="4" tvg-country="CZ" group-title="Czech Republic",ČT sport
 https://sktv.mxnticek.eu/new/stream.php?ch=CTsport
 #EXTINF:-1 tvg-name="ČT art" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/ct-art-cz.png" tvg-id="CTart.cz" tvg-chno="6" tvg-country="CZ" group-title="Czech Republic",ČT art
 https://sktv.mxnticek.eu/new/stream.php?ch=CTart
+#EXTINF:-1 tvg-name="TV Nova Ⓢ" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-cz.png" tvg-id="tvnova.cz" tvg-chno="8" tvg-country="CZ" group-title="Czech Republic",TV Nova Ⓢ
+https://sktv.mxnticek.eu/new/stream.php?ch=Nova
 #EXTINF:-1 tvg-name="Nova Action" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-action-cz.png" tvg-id="NovaAction.cz" tvg-chno="10" tvg-country="CZ" group-title="Czech Republic",Nova Action
 https://sktv.mxnticek.eu/new/stream.php?ch=NovaAction
-#EXTINF:-1 tvg-name="Nova Lady" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-lady-cz.png" tvg-id="NovaLady.cz" tvg-chno="13" tvg-country="CZ" group-title="Czech Republic",Nova Lady
-https://sktv.mxnticek.eu/new/stream.php?ch=NovaLady
+#EXTINF:-1 tvg-name="Nova Fun" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-fun-cz.png" tvg-id="NovaFun.cz" tvg-chno="11" tvg-country="CZ" group-title="Czech Republic",Nova Fun
+https://sktv.mxnticek.eu/new/stream.php?ch=NovaFun
 #EXTINF:-1 tvg-name="TN Live" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/nova-cz.png" tvg-id="" tvg-chno="14" tvg-country="CZ" group-title="Czech Republic",TN Live
 https://sktv.mxnticek.eu/new/stream.php?ch=Nova%20TN%20Live
-#EXTINF:-1 tvg-name="Prima" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/prima-cz.png" tvg-id="Prima.cz" tvg-chno="15" tvg-country="CZ" group-title="Czech Republic",Prima
-https://sktv.mxnticek.eu/new/stream.php?ch=Prima
-#EXTINF:-1 tvg-name="Prima STAR" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/prima-star-cz.png" tvg-id="PrimaStar.cz" tvg-chno="19" tvg-country="CZ" group-title="Czech Republic",Prima STAR
-https://sktv.mxnticek.eu/new/stream.php?ch=PrimaStar
+#EXTINF:-1 tvg-name="CNN Prima News" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/cnn-prima-news-cz.png" tvg-id="CNNPrimaNews.cz" tvg-chno="16" tvg-country="CZ" group-title="Czech Republic",CNN Prima News
+https://sktv.mxnticek.eu/new/stream.php?ch=PrimaNews
 #EXTINF:-1 tvg-name="Prima Krimi" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/prima-krimi-cz.png" tvg-id="PrimaKrimi.cz" tvg-chno="20" tvg-country="CZ" group-title="Czech Republic",Prima Krimi
 https://sktv.mxnticek.eu/new/stream.php?ch=PrimaKrimi
+#EXTINF:-1 tvg-name="Prima Show" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/prima-show-cz.png" tvg-id="PrimaShow.cz" tvg-chno="23" tvg-country="CZ" group-title="Czech Republic",Prima Show
+https://sktv.mxnticek.eu/new/stream.php?ch=PrimaShow
 #EXTINF:-1 tvg-name="JOJ Family Ⓢ" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/joj-family-cz.png" tvg-id="JojFamily.sk" tvg-chno="24" tvg-country="CZ" group-title="Czech Republic",JOJ Family Ⓢ
 https://sktv.mxnticek.eu/new/stream.php?ch=JOJ%20Family
 #EXTINF:-1 tvg-name="JOJ Cinema" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/czech-republic/joj-cinema-cz.png" tvg-id="JojCinema.cz" tvg-chno="25" tvg-country="CZ" group-title="Czech Republic",JOJ Cinema
@@ -254,34 +258,18 @@ https://lifetv.bitflip.ee/live/stream1.m3u8
 http://dc.tbnbaltia.eu:8088/dvr/rewind-21600.m3u8
 #EXTINF:-1 tvg-name="Tingvarp" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/9/90/Logo_-_L%C3%B8gting.png" tvg-id="Tingvarp.fo" tvg-chno="2" tvg-country="FO" group-title="Faroe Islands",Tingvarp
 https://play.kringvarp.fo/redirect/tingvarp/_definst_/smil:tingvarp.smil?type=m3u8
-#EXTINF:-1 tvg-name="MTV3" tvg-logo="https://i.imgur.com/kNbmc8n.png" tvg-id="MTV3.fi" tvg-chno="3" tvg-country="FI" group-title="Finland",MTV3
-https://live-fi.tvkaista.net/mtv3/live.m3u8?src=freetv
-#EXTINF:-1 tvg-name="Nelonen" tvg-logo="https://i.imgur.com/BFbCyfY.png" tvg-id="Nelonen.fi" tvg-chno="4" tvg-country="FI" group-title="Finland",Nelonen
-https://live-fi.tvkaista.net/nelonen/live.m3u8?src=freetv
-#EXTINF:-1 tvg-name="MTV Sub" tvg-logo="https://i.imgur.com/VRCuxQt.png" tvg-id="Sub.fi" tvg-chno="6" tvg-country="FI" group-title="Finland",MTV Sub
-https://live-fi.tvkaista.net/sub/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="TV5 Finland" tvg-logo="https://i.imgur.com/MoukyGs.png" tvg-id="TV5.fi" tvg-chno="7" tvg-country="FI" group-title="Finland",TV5 Finland
 https://live-fi.tvkaista.net/tv5/live.m3u8?src=freetv
-#EXTINF:-1 tvg-name="Liv" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/0/06/Liv_color_RGB.png" tvg-id="Liv.fi" tvg-chno="8" tvg-country="FI" group-title="Finland",Liv
-https://live-fi.tvkaista.net/liv/live.m3u8?src=freetv
-#EXTINF:-1 tvg-name="Jim" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/9/92/Jim_color_RGB.png" tvg-id="Jim.fi" tvg-chno="9" tvg-country="FI" group-title="Finland",Jim
-https://live-fi.tvkaista.net/jim/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Kutonen" tvg-logo="https://i.imgur.com/4giVyxb.png" tvg-id="Kutonen.fi" tvg-chno="10" tvg-country="FI" group-title="Finland",Kutonen
 https://live-fi.tvkaista.net/kutonen/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="TLC Finland" tvg-logo="https://i.imgur.com/0d5hP3A.png" tvg-id="TLCFinland.fi" tvg-chno="11" tvg-country="FI" group-title="Finland",TLC Finland
 https://live-fi.tvkaista.net/tlc/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Star Channel Finland" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Star_Channel_2020.svg/640px-Star_Channel_2020.svg.png" tvg-id="StarChannel.fi" tvg-chno="12" tvg-country="FI" group-title="Finland",Star Channel Finland
 https://live-fi.tvkaista.net/star-channel/live.m3u8?src=freetv
-#EXTINF:-1 tvg-name="MTV Ava" tvg-logo="https://i.imgur.com/rtyJVgB.png" tvg-id="AVA.fi" tvg-chno="13" tvg-country="FI" group-title="Finland",MTV Ava
-https://live-fi.tvkaista.net/ava/live.m3u8?src=freetv
-#EXTINF:-1 tvg-name="Hero" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/b/bd/Hero_color_RGB.png" tvg-id="Hero.fi" tvg-chno="14" tvg-country="FI" group-title="Finland",Hero
-https://live-fi.tvkaista.net/hero/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Frii" tvg-logo="https://i.imgur.com/ljKoG9I.png" tvg-id="Frii.fi" tvg-chno="15" tvg-country="FI" group-title="Finland",Frii
 https://live-fi.tvkaista.net/frii/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="Alfa Ⓢ" tvg-logo="https://upload.wikimedia.org/wikipedia/fi/9/93/IRR-TV-1.png" tvg-id="IRRTV.fi" tvg-chno="17" tvg-country="FI" group-title="Finland",Alfa Ⓢ
 https://irrtv2.digitacdn.net/live/ott/irrtv/playlist.m3u8?organizationId=229401409&suiteItemId=230439940
-#EXTINF:-1 tvg-name="TapahtumaTV Eveo" tvg-logo="https://i.imgur.com/sR8nA8w.png" tvg-id="Eveo.fi" tvg-chno="18" tvg-country="FI" group-title="Finland",TapahtumaTV Eveo
-https://live-fi.tvkaista.net/tapahtumatv-eveo/live.m3u8?src=freetv
 #EXTINF:-1 tvg-name="OnniTV" tvg-logo="https://i.imgur.com/HzILf2H.png" tvg-id="KotiTV.fi" tvg-chno="33" tvg-country="FI" group-title="Finland",OnniTV
 https://onnitv.digitacdn.net/live/ott/onnitv/playlist.m3u8?organizationId=83459409&suiteItemId=83459780
 #EXTINF:-1 tvg-name="Taivas TV7" tvg-logo="https://i.imgur.com/a4iNVXA.png" tvg-id="TaivasTV7.fi" tvg-chno="45" tvg-country="FI" group-title="Finland",Taivas TV7
@@ -400,8 +388,6 @@ https://onechannel.siliconweb.com/one/stream/chunks_dvr.m3u8
 http://eu2.tv4e.gr:1935/live/myStream.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="Egnatia" tvg-logo="https://i.imgur.com/zuyYIca.png" tvg-id="egnatiatv.gr" tvg-chno="53" tvg-country="GR" group-title="Greece",Egnatia
 https://video.streams.ovh:1936/egnatiatv/egnatiatv/index.m3u
-#EXTINF:-1 tvg-name="Euro" tvg-logo="https://i.imgur.com/mHCk05E.png" tvg-id="eurotv.gr" tvg-chno="54" tvg-country="GR" group-title="Greece",Euro
-https://live20.bozztv.com/akamaissh101/ssh101/eurotvlive/playlist.m3u8
 #EXTINF:-1 tvg-name="Gnomi" tvg-logo="https://i.imgur.com/mHCk05E.png" tvg-id="gnomitv.gr" tvg-chno="55" tvg-country="GR" group-title="Greece",Gnomi
 https://live.streams.ovh:8081/gnomitv/index.m3u8
 #EXTINF:-1 tvg-name="Pella" tvg-logo="https://i.imgur.com/pwUkkGL.jpeg" tvg-id="pellatv.gr" tvg-chno="55" tvg-country="GR" group-title="Greece",Pella
@@ -410,8 +396,6 @@ https://video.streams.ovh:1936/pellatv/pellatv/playlist.m3u8
 https://verginanews.gr:8443/hls_live/stream1.m3u8
 #EXTINF:-1 tvg-name="Best TV" tvg-logo="https://i.imgur.com/VA13E3w.png" tvg-id="besttv.gr" tvg-chno="61" tvg-country="GR" group-title="Greece",Best TV
 https://besttv.siliconweb.com/bestTV/live_abr/playlist.m3u8
-#EXTINF:-1 tvg-name="Hlektra" tvg-logo="https://i.imgur.com/LbogUPS.png" tvg-id="hlektra.gr" tvg-chno="62" tvg-country="GR" group-title="Greece",Hlektra
-https://live20.bozztv.com/giatv/giatv-hlektratv/hlektratv/playlist.m3u8
 #EXTINF:-1 tvg-name="Ionian Channel" tvg-logo="https://i.imgur.com/ADVYeQd.png" tvg-id="ioniantv.gr" tvg-chno="63" tvg-country="GR" group-title="Greece",Ionian Channel
 https://stream.ioniantv.gr/ionian/live_abr/playlist.m3u8
 #EXTINF:-1 tvg-name="Lepanto" tvg-logo="https://i.imgur.com/h6Tqe0k.png" tvg-id="lepantortv.gr" tvg-chno="64" tvg-country="GR" group-title="Greece",Lepanto
@@ -430,8 +414,6 @@ https://av.hellasnet.tv/rst/trt/index.m3u8
 https://acheloostv.streamings.gr/live/stream/index.m3u8
 #EXTINF:-1 tvg-name="Corfu" tvg-logo="https://i.imgur.com/dCMqo8w.jpeg" tvg-id="corfutv.gr" tvg-chno="93" tvg-country="GR" group-title="Greece",Corfu
 https://itv.streams.ovh:1936/corfuchannel/corfuchannel/playlist.m3u8
-#EXTINF:-1 tvg-name="Start" tvg-logo="https://i.imgur.com/nrEtmBN.png" tvg-id="starttv.gr" tvg-chno="95" tvg-country="GR" group-title="Greece",Start
-https://live.cast-control.eu/StartMedia/StartMedia/playlist.m3u8
 #EXTINF:-1 tvg-name="Center TV" tvg-logo="https://i.imgur.com/52JW71Q.png" tvg-id="CenterTV.gr" tvg-chno="101" tvg-country="GR" group-title="Greece",Center TV
 https://eu1.streams.gr:8081/centertv/index.m3u8
 #EXTINF:-1 tvg-name="Delta Evros" tvg-logo="https://i.imgur.com/PDfSkRF.png" tvg-id="DeltaTV.gr" tvg-chno="102" tvg-country="GR" group-title="Greece",Delta Evros
@@ -482,6 +464,8 @@ https://stream.y5.hu/stream/stream_bekescsaba/stream.m3u8
 https://cloudfront44.lexanetwork.com:1344/freerelay/16tv.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="CityTV (Belváros Lipótváros)" tvg-logo="https://www.citytv.hu/images/logo.png" tvg-chno="11" tvg-country="HU" group-title="Hungary",CityTV (Belváros Lipótváros)
 https://citytv.hu/playlist.m3u8
+#EXTINF:-1 tvg-name="FehérvárTV" tvg-logo="https://www.fehervartv.hu/css/img/icon-1-2.png" tvg-chno="12" tvg-country="HU" group-title="Hungary",FehérvárTV
+https://cloudfront44.lexanetwork.com:1344/freerelay/fehervartv.sdp/playlist.m3u8?key=EWSj2
 #EXTINF:-1 tvg-name="AlföldTV" tvg-logo="http://www.dealood.com/content/uploads/images/March2019/5c9721a07ea87-images-large.png" tvg-chno="13" tvg-country="HU" group-title="Hungary",AlföldTV
 https://cloudfront41.lexanetwork.com:1344/relay01/livestream006.sdp/playlist.m3u8
 #EXTINF:-1 tvg-name="Gyöngyös TV" tvg-logo="https://i.imgur.com/RHgaPCk.png" tvg-id="GyongyosiTV.hu" tvg-chno="14" tvg-country="HU" group-title="Hungary",Gyöngyös TV
@@ -686,8 +670,6 @@ https://db142859fd5541b09de25d6507f1f2d3.msvdn.net/live/S17501676/oIxAsgEEA46M/p
 https://5f22d76e220e1.streamlock.net/canale6/canale6/playlist.m3u8
 #EXTINF:-1 tvg-name="Cafe Tv 24" tvg-logo="https://i.imgur.com/KbcbxFw.png" tvg-country="IT" group-title="Italy",Cafe Tv 24
 https://srvx1.selftv.video/cafe/live/playlist.m3u8
-#EXTINF:-1 tvg-name="Calabria Uno Tv" tvg-logo="https://i.imgur.com/2TK1GQ5.png" tvg-country="IT" group-title="Italy",Calabria Uno Tv
-https://635320cd397eb.streamlock.net/live/ngrp:calabriaunolive_all/playlist.m3u8
 #EXTINF:-1 tvg-name="Canale 10" tvg-logo="https://i.imgur.com/KuQcjYV.png" tvg-country="IT" group-title="Italy",Canale 10
 https://nrvideo1.newradio.it:1936/desxcerbht/desxcerbht/playlist.m3u8
 #EXTINF:-1 tvg-name="Canale 2" tvg-logo="https://i.imgur.com/ETqDkS1.png" tvg-country="IT" group-title="Italy",Canale 2
@@ -778,6 +760,8 @@ https://f5842579ff984c1c98d63b8d789673eb.msvdn.net/live/S27391994/HVvPMzy/playli
 https://f5842579ff984c1c98d63b8d789673eb.msvdn.net/live/S47282891/JWjL3xqPf4bX/playlist.m3u8
 #EXTINF:-1 tvg-name="Lab Tv" tvg-logo="https://i.imgur.com/OpRS6Fl.png" tvg-country="IT" group-title="Italy",Lab Tv
 https://customer-yzibk50951uq418a.cloudflarestream.com/a58893dee4b9922a75e41b4ec4243f84/manifest/video.m3u8
+#EXTINF:-1 tvg-name="Lazio Tv" tvg-logo="https://i.imgur.com/DAj5Uwb.png" tvg-country="IT" group-title="Italy",Lazio Tv
+https://streaming.softwarecreation.it/LazioTv/LazioTv/playlist.m3u8
 #EXTINF:-1 tvg-name="Le Cronache Lucane Tv" tvg-logo="https://i.imgur.com/EBY3IZL.jpg" tvg-country="IT" group-title="Italy",Le Cronache Lucane Tv
 http://stucazz.com:8888/hls/cronache.m3u8
 #EXTINF:-1 tvg-name="Lira Tv" tvg-logo="https://i.imgur.com/S0ReVEo.png" tvg-country="IT" group-title="Italy",Lira Tv
@@ -794,10 +778,6 @@ https://5f22d76e220e1.streamlock.net/medjugorjeitaliatv/medjugorjeitaliatv/playl
 https://5db313b643fd8.streamlock.net:443/MinformoTV/MinformoTV/playlist.m3u8
 #EXTINF:-1 tvg-name="NTI Canale 271" tvg-logo="https://i.imgur.com/zlmcUe0.jpg" tvg-country="IT" group-title="Italy",NTI Canale 271
 https://www.ntimedia.it/video/S0B/S0B_master.m3u8
-#EXTINF:-1 tvg-name="Nuova Tv 1" tvg-logo="https://i.imgur.com/1yqTZhR.png" tvg-country="IT" group-title="Italy",Nuova Tv 1
-https://nuovatv.net:8443/tv/stream.m3u8
-#EXTINF:-1 tvg-name="Nuvola Tv" tvg-logo="https://i.imgur.com/EDGez2x.png" tvg-country="IT" group-title="Italy",Nuvola Tv
-https://stream.nuvola.tv:8181/memfs/4aaa6328-1879-4ebf-b18a-498146d0c61c.m3u8
 #EXTINF:-1 tvg-name="Onda Novara Tv" tvg-logo="https://i.imgur.com/Qoh9CFy.png" tvg-country="IT" group-title="Italy",Onda Novara Tv
 https://585b674743bbb.streamlock.net/9006/9006/playlist.m3u8
 #EXTINF:-1 tvg-name="Onda Web Radio" tvg-logo="https://i.imgur.com/3hTvrC8.jpg" tvg-country="IT" group-title="Italy",Onda Web Radio
@@ -906,6 +886,8 @@ https://59d39900ebfb8.streamlock.net/SuperJtv/SuperJtv/playlist.m3u8
 https://5db313b643fd8.streamlock.net/SUPERSIXLombardia/SUPERSIXLombardia/playlist.m3u8
 #EXTINF:-1 tvg-name="Supertv" tvg-logo="https://i.imgur.com/7gUZcEh.png" tvg-country="IT" group-title="Italy",Supertv
 http://wms.shared.streamshow.it:1935/supertv/supertv/live.m3u8
+#EXTINF:-1 tvg-name="T9" tvg-logo="https://i.imgur.com/XzL05Py.png" tvg-country="IT" group-title="Italy",T9
+https://streaming.softwarecreation.it/tnove/tnove/playlist.m3u8
 #EXTINF:-1 tvg-name="TRC Santeramo" tvg-logo="https://i.imgur.com/VbYdS8P.jpg" tvg-country="IT" group-title="Italy",TRC Santeramo
 https://stream7.livinlive.it/trc/trc/playlist.m3u8
 #EXTINF:-1 tvg-name="TRL Tele Radio Leo" tvg-logo="https://i.imgur.com/qAagkJT.png" tvg-country="IT" group-title="Italy",TRL Tele Radio Leo
@@ -978,6 +960,8 @@ https://64b16f23efbee.streamlock.net/telecitypiemonte/telecitypiemonte/playlist.
 https://64b16f23efbee.streamlock.net/telecityvda/telecityvda/playlist.m3u8
 #EXTINF:-1 tvg-name="Telegenova" tvg-logo="https://i.imgur.com/D6HC0So.png" tvg-country="IT" group-title="Italy",Telegenova
 https://64b16f23efbee.streamlock.net/telegenova/telegenova/playlist.m3u8
+#EXTINF:-1 tvg-name="Teleitalia 41" tvg-logo="https://i.imgur.com/lTuPSOn.png" tvg-country="IT" group-title="Italy",Teleitalia 41
+https://streaming.softwarecreation.it/teleitalia/teleitalia/playlist.m3u8
 #EXTINF:-1 tvg-name="Teleleonessa" tvg-logo="https://i.imgur.com/jq3etlV.png" tvg-country="IT" group-title="Italy",Teleleonessa
 http://wms.shared.streamshow.it:1935/teleleonessa/teleleonessa/live.m3u8
 #EXTINF:-1 tvg-name="TeleMajg" tvg-logo="https://i.imgur.com/9tefonp.jpg" tvg-country="IT" group-title="Italy",TeleMajg
@@ -986,6 +970,8 @@ https://59d7d6f47d7fc.streamlock.net/telemajg/telemajg/playlist.m3u8
 https://64b16f23efbee.streamlock.net/telenova/telenova/playlist.m3u8
 #EXTINF:-1 tvg-name="Telerama" tvg-logo="https://i.imgur.com/enfqUlI.jpg" tvg-country="IT" group-title="Italy",Telerama
 https://58d921499d3d3.streamlock.net/TeleRama/livestream/playlist.m3u8
+#EXTINF:-1 tvg-name="TeleRegione" tvg-logo="https://i.imgur.com/i5WozUP.png" tvg-country="IT" group-title="Italy",TeleRegione
+https://streaming.softwarecreation.it/TR118/TR118/playlist.m3u8
 #EXTINF:-1 tvg-name="Teleromagna" tvg-logo="https://i.imgur.com/4jWadI8.png" tvg-country="IT" group-title="Italy",Teleromagna
 https://livetr.teleromagna.it/teleromagna/live/playlist.m3u8
 #EXTINF:-1 tvg-name="Teleromagna 24" tvg-logo="https://i.imgur.com/Bpml478.png" tvg-country="IT" group-title="Italy",Teleromagna 24
@@ -1136,8 +1122,6 @@ https://t2.tvmak.com/tv/TV21MK.m3u8?QScgsh2FfM
 http://zdravkin.hugo.mk:1935/live/zdravkin/playlist.m3u8
 #EXTINF:-1 tvg-name="ТВ НОВА 12" tvg-logo="https://i.imgur.com/Qo3Hj3t.png" tvg-id="tvnova12.mk" tvg-chno="14" tvg-country="MK" group-title="North Macedonia",ТВ НОВА 12
 http://151.236.247.171:8080/nova/index.m3u8
-#EXTINF:-1 tvg-name="ЗОНА М1 ТВ" tvg-logo="https://i.imgur.com/yTR7A0d.png" tvg-id="zona m1" tvg-chno="15" tvg-country="MK" group-title="North Macedonia",ЗОНА М1 ТВ
-https://zonam1.ddns.net/hls/stream1.m3u8
 #EXTINF:-1 tvg-name="Наша ТВ" tvg-logo="https://i.imgur.com/EOLrXvB.png" tvg-id="NasaTV.mk" tvg-chno="1" tvg-country="MK" group-title="North Macedonia",Наша ТВ
 https://stream.nasatv.com.mk/hls/nasatv_live.m3u8
 #EXTINF:-1 tvg-name="Sky Folk" tvg-logo="https://i.imgur.com/xRw4Hmu.png" tvg-id="SkyFolkTV.mk" tvg-chno="8" tvg-country="MK" group-title="North Macedonia",Sky Folk
@@ -1220,6 +1204,8 @@ https://vgtrkregion-reg.cdnvideo.ru/vgtrk/kaliningrad/russia1-hd/index.m3u8
 https://ok.ru/video/1166706155179
 #EXTINF:-1 tvg-name="Кубань 24 Ⓞ" tvg-logo="https://i.imgur.com/atzrXcz.png" tvg-id="Kuban24.ru" tvg-country="RU" group-title="Russia",Кубань 24 Ⓞ
 https://ok.ru/video/4157442498242
+#EXTINF:-1 tvg-name="Мир Белогорья" tvg-logo="https://i.imgur.com/CCNAg7R.png" tvg-id="MirBelogorya.ru" tvg-country="RU" group-title="Russia",Мир Белогорья
+http://mirbelogorya.ru:8080/mirbelogorya/index.m3u8
 #EXTINF:-1 tvg-name="Москва 24" tvg-logo="https://i.imgur.com/gXbUMVy.png" tvg-id="Moskva24.ru" tvg-country="RU" group-title="Russia",Москва 24
 https://player.smotrim.ru/iframe/stream/live_id/1661
 #EXTINF:-1 tvg-name="Нижний Новгород 24" tvg-logo="https://i.imgur.com/ZWgPVIC.png" tvg-id="NizhniyNovgorod24.ru" tvg-country="RU" group-title="Russia",Нижний Новгород 24
@@ -1340,8 +1326,12 @@ https://www.youtube.com/watch?v=xL0ch83RAK8
 https://www.youtube.com/watch?v=4HysYHJ6GkY
 #EXTINF:-1 tvg-name="Congress Channel 2 Ⓨ" tvg-logo="https://i.imgur.com/htGr996.png" tvg-id="CongressChannel2.tw" tvg-chno="23" tvg-country="TW" group-title="Taiwan",Congress Channel 2 Ⓨ
 https://www.youtube.com/watch?v=RAP4h3q6_Sg
+#EXTINF:-1 tvg-name="TRT 1" tvg-logo="https://i.imgur.com/j786OLG.png" tvg-id="TRT1.tr" tvg-chno="1" tvg-country="TR" group-title="Turkey",TRT 1
+https://tv-trt1.medya.trt.com.tr/master.m3u8
 #EXTINF:-1 tvg-name="TRT Haber" tvg-logo="https://i.imgur.com/OVfo8Ab.png" tvg-id="TRTHaber.tr" tvg-chno="3" tvg-country="TR" group-title="Turkey",TRT Haber
 https://tv-trthaber.medya.trt.com.tr/master.m3u8
+#EXTINF:-1 tvg-name="TRT Çocuk" tvg-logo="https://i.imgur.com/QLFmD6d.png" tvg-id="TRTCocuk.tr" tvg-chno="6" tvg-country="TR" group-title="Turkey",TRT Çocuk
+https://tv-trtcocuk.medya.trt.com.tr/master.m3u8
 #EXTINF:-1 tvg-name="TRT Müzik" tvg-logo="https://i.imgur.com/fIVFCEd.png" tvg-chno="7" tvg-country="TR" group-title="Turkey",TRT Müzik
 https://tv-trtmuzik.medya.trt.com.tr/master.m3u8
 #EXTINF:-1 tvg-name="TRT Avaz" tvg-logo="https://i.imgur.com/VhTwXu5.png" tvg-id="TRTAvaz.tr" tvg-chno="9" tvg-country="TR" group-title="Turkey",TRT Avaz
@@ -1570,10 +1560,10 @@ https://www.youtube.com/tvcnewsnigeria/live
 https://www.youtube.com/channelstelevision/live
 #EXTINF:-1 tvg-name="Global News" tvg-logo="https://i.imgur.com/xk1QOhW.png" tvg-id="GlobalNews.ca" tvg-chno="33" group-title="News",Global News
 https://live.corusdigitaldev.com/groupd/live/49a91e7f-1023-430f-8d66-561055f3d0f7/live.isml/.m3u8
+#EXTINF:-1 tvg-name="Russia Today Ⓖ" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Russia-today-logo.svg/500px-Russia-today-logo.svg.png" tvg-id="RT.ru" tvg-chno="34" group-title="News",Russia Today Ⓖ
+https://rt-glb.rttv.com/live/rtnews/playlist.m3u8
 #EXTINF:-1 tvg-name="CNN International" tvg-logo="https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cnn-us.png" tvg-id="CNNInternationalEurope.us" tvg-chno="37" group-title="News",CNN International
 https://turnerlive.warnermediacdn.com/hls/live/586495/cnngo/cnn_slate/VIDEO_0_3564000.m3u8
-#EXTINF:-1 tvg-name="Joy News" tvg-logo="https://i.imgur.com/kGuMNmR.png" tvg-id="JoyNews.gh" tvg-chno="40" group-title="News",Joy News
-https://ythls.armelin.one/channel/UChd1DEecCRlxaa0-hvPACCw.m3u8
 #EXTINF:-1 tvg-name="SABC News" tvg-logo="https://i.imgur.com/H9q3Q9d.png" tvg-id="SABCNews.gh" tvg-chno="41" group-title="News",SABC News
 https://sabconetanw.cdn.mangomolo.com/news/smil:news.stream.smil/chunklist_b250000_t64MjQwcA==.m3u8
 #EXTINF:-1 tvg-name="Bloomberg TV+" tvg-logo="https://i.imgur.com/xGlToly.png" tvg-id="BloombergTVPlus.us" tvg-chno="102" group-title="Business",Bloomberg TV+
@@ -3936,8 +3926,6 @@ https://jmp2.uk/plu-65cba73611ced700082123bc.m3u8
 https://jmp2.uk/plu-678029c654f43dad4b5c1ec0.m3u8
 #EXTINF:-1 channel-id="684ac10236c9361b1977f7bc-de" tvg-id="684ac10236c9361b1977f7bc" tvg-chno="393" tvg-name="Bronco" tvg-logo="https://images.pluto.tv/channels/684ac10236c9361b1977f7bc/colorLogoPNG_1757588251975.png" group-title="Germany",Bronco
 https://jmp2.uk/plu-684ac10236c9361b1977f7bc.m3u8
-#EXTINF:-1 channel-id="685029cda1e091e16ff57fc8-dk" tvg-id="685029cda1e091e16ff57fc8" tvg-chno="217" tvg-name="Brøndby TV" tvg-logo="https://images.pluto.tv/channels/685029cda1e091e16ff57fc8/colorLogoPNG_1750246109707.png" group-title="Denmark",Brøndby TV
-https://jmp2.uk/plu-685029cda1e091e16ff57fc8.m3u8
 #EXTINF:-1 channel-id="6964b9b97d2afdec4f9390f6-no" tvg-id="6964b9b97d2afdec4f9390f6" tvg-chno="259" tvg-name="Bull" tvg-logo="https://images.pluto.tv/channels/6964b9b97d2afdec4f9390f6/colorLogoPNG_1770901081141.png" group-title="Norway",Bull
 https://jmp2.uk/plu-6964b9b97d2afdec4f9390f6.m3u8
 #EXTINF:-1 channel-id="6964b9e19bf57be1537fc7d7-se" tvg-id="6964b9e19bf57be1537fc7d7" tvg-chno="211" tvg-name="Bull" tvg-logo="https://images.pluto.tv/channels/6964b9e19bf57be1537fc7d7/colorLogoPNG_1770901125039.png" group-title="Sweden",Bull
@@ -8446,6 +8434,8 @@ https://jmp2.uk/stvp-USBD3500022DN
 https://jmp2.uk/stvp-CABD1200029U0
 #EXTINF:-1 channel-id="USBD3500010MT-us" tvg-id="USBD3500010MT" tvg-chno="4467" tvg-name="Stingray Hip Hop" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/USBD3500010MT_20260421T141910SQUARE.png" group-title="United States",Stingray Hip Hop
 https://jmp2.uk/stvp-USBD3500010MT
+#EXTINF:-1 channel-id="CA4000013R-ca" tvg-id="CA4000013R" tvg-chno="4570" tvg-name="Stingray Holidayscapes" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/CA4000013R_20260421T140734SQUARE.png" group-title="Canada",Stingray Holidayscapes
+https://jmp2.uk/stvp-CA4000013R
 #EXTINF:-1 channel-id="USBD3500038R6-us" tvg-id="USBD3500038R6" tvg-chno="4570" tvg-name="Stingray Holidayscapes" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/USBD3500038R6_20251230T035626SQUARE.png" group-title="United States",Stingray Holidayscapes
 https://jmp2.uk/stvp-USBD3500038R6
 #EXTINF:-1 channel-id="CABD1200025IX-ca" tvg-id="CABD1200025IX" tvg-chno="4480" tvg-name="Stingray Hot Country" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/CABD1200025IX_20251230T035728SQUARE.png" group-title="Canada",Stingray Hot Country
@@ -9358,6 +9348,8 @@ https://jmp2.uk/stvp-CHBB3900007I2
 https://jmp2.uk/stvp-FRBD19000095S
 #EXTINF:-1 channel-id="KRBC32000191N-kr" tvg-id="KRBC32000191N" tvg-chno="742" tvg-name="CJ ENM MOVIE" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/KRBC32000191N_20260623T003139SQUARE.png" group-title="South Korea",CJ ENM MOVIE
 https://jmp2.uk/stvp-KRBC32000191N
+#EXTINF:-1 channel-id="ESBC4100003WE-es" tvg-id="ESBC4100003WE" tvg-chno="4771" tvg-name="Clan" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ESBC4100003WE_20260622T063701SQUARE.png" group-title="Spain",Clan
+https://jmp2.uk/stvp-ESBC4100003WE
 #EXTINF:-1 channel-id="IT2700002ZN-it" tvg-id="IT2700002ZN" tvg-chno="4557" tvg-name="Class CNBC" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/IT2700002ZN_20260210T040118SQUARE.png" group-title="Italy",Class CNBC
 https://jmp2.uk/stvp-IT2700002ZN
 #EXTINF:-1 channel-id="IT500010AQ-it" tvg-id="IT500010AQ" tvg-chno="4068" tvg-name="Class TV Moda" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/IT500010AQ_20260113T032834SQUARE.png" group-title="Italy",Class TV Moda
@@ -9676,8 +9668,6 @@ https://jmp2.uk/stvp-IN8000196E
 https://jmp2.uk/stvp-IN17000109O
 #EXTINF:-1 channel-id="FRBD5100003TP-fr" tvg-id="FRBD5100003TP" tvg-chno="4205" tvg-name="Epicurieux avec Jamy" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/FRBD5100003TP_20251202T002632SQUARE.png" group-title="France",Epicurieux avec Jamy
 https://jmp2.uk/stvp-FRBD5100003TP
-#EXTINF:-1 channel-id="KR410000247-kr" tvg-id="KR410000247" tvg-chno="721" tvg-name="essential; by Bugs" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/KR410000247_20260422T013923SQUARE.png" group-title="South Korea",essential; by Bugs
-https://jmp2.uk/stvp-KR410000247
 #EXTINF:-1 channel-id="ES26000068D-es" tvg-id="ES26000068D" tvg-chno="4217" tvg-name="Estilo y Vida – Rakuten TV" tvg-logo="https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ES26000068D_20260707T050942SQUARE.png" group-title="Spain",Estilo y Vida – Rakuten TV
 https://jmp2.uk/stvp-ES26000068D
 #EXTINF:-1 channel-id="IN4900003U3-in" tvg-id="IN4900003U3" tvg-chno="1346" tvg-name="ETV Comedy" tvg-logo="https://tvpnlogopus.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/IN4900003U3_20260623T014812SQUARE.png" group-title="India",ETV Comedy
