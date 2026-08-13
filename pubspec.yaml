@@ -50,6 +50,12 @@ dependencies:
   # EPG (parsing XMLTV en streaming)
   xml: ^6.5.0
 
+  # WebView (lecture VOD embed)
+  webview_flutter: ^4.10.0
+
+  # File picker (sous-titres externes)
+  file_picker: ^8.1.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

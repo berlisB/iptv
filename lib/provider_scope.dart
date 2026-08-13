@@ -4,6 +4,7 @@ import 'package:iptv/features/home/provider/home_provider.dart';
 import 'package:iptv/features/favorites/provider/favorites_provider.dart';
 import 'package:iptv/features/player/provider/mini_player_provider.dart';
 import 'package:iptv/features/epg/provider/epg_provider.dart';
+import 'package:iptv/features/vod/provider/vod_provider.dart';
 
 class ProviderScope extends StatelessWidget {
   final Widget child;
@@ -18,6 +19,7 @@ class ProviderScope extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => MiniPlayerProvider()),
         ChangeNotifierProvider(create: (_) => EpgProvider()),
+        ChangeNotifierProvider(create: (_) => VodProvider()),
       ],
       child: child,
     );

@@ -4,8 +4,14 @@ import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/home/domain/repositories/channel_repository.dart';
 
 class ChannelRepositoryImpl implements ChannelRepository {
+  /// Catalogue distant (GitHub raw) : corrigeable sans publier de release.
+  /// Repli automatique sur l'asset local si indisponible.
+  static const String _catalogRemoteUrl =
+      'https://raw.githubusercontent.com/berlisB/iptv/main/assets/catalog/channels.json';
+
   ChannelRepositoryImpl({ChannelCatalogSource? catalogSource})
-      : _catalog = catalogSource ?? ChannelCatalogSource();
+      : _catalog = catalogSource ??
+            ChannelCatalogSource(remoteUrl: _catalogRemoteUrl);
 
   final ChannelCatalogSource _catalog;
 

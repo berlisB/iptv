@@ -350,6 +350,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                     ),
+                    // Now playing info from EPG
+                    if (channel.tvgId.isNotEmpty)
+                      Consumer<EpgProvider>(
+                        builder: (context, epg, _) {
+                          final nn = epg.nowNext(channel.tvgId);
+                          if (nn.now == null) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              '▶ ${nn.now!.title}',
+                              style: AppTypography.caption.copyWith(
+                                color: AppColor.textMuted,
+                                fontSize: 9,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        },
+                      ),
                     const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 import 'package:iptv/features/epg/domain/epg_programme.dart';
+import 'package:iptv/features/epg/data/epg_id_mapping.dart';
 
 /// Télécharge et parse un guide XMLTV en streaming (sans charger tout le fichier).
 class EpgService {
@@ -27,6 +28,17 @@ class EpgService {
     final ref = now ?? DateTime.now();
     final from = ref.subtract(const Duration(hours: 3));
     final until = ref.add(const Duration(hours: 12));
+
+    // Convertir les tvgId du catalogue en channel id XMLTV
+    final epgIds = EpgIdMapping.toEpgIds(wantedIds);
+    // Map epgId → catalogId pour retrouver nos IDs après parsing
+    final epgToCatalog = <String, String>{};
+    for (final catalogId in wantedIds) {
+      final epgId = EpgIdMapping.toEpgId(catalogId);
+      epgToCatalog[epgId] = catalogId;
+    }
+
+    debugPrint('[EPG] Recherche de ${epgIds.length} chaînes dans le guide');
 
     try {
       final client = http.Client();
@@ -51,7 +63,10 @@ class EpgService {
           if (node is! XmlElement) continue;
           final el = node;
           final channel = el.getAttribute('channel');
-          if (channel == null || !wantedIds.contains(channel)) continue;
+          if (channel == null || !epgIds.contains(channel)) continue;
+
+          // Retrouver le tvgId du catalogue
+          final catalogId = epgToCatalog[channel] ?? channel;
 
           final start = _parseXmltvDate(el.getAttribute('start'));
           final stop = _parseXmltvDate(el.getAttribute('stop'));
@@ -61,8 +76,8 @@ class EpgService {
           final title = el.getElement('title')?.innerText.trim() ?? '';
           if (title.isEmpty) continue;
 
-          (result[channel] ??= []).add(EpgProgramme(
-            channelId: channel,
+          (result[catalogId] ??= []).add(EpgProgramme(
+            channelId: catalogId,
             start: start,
             stop: stop,
             title: title,

@@ -27,16 +27,19 @@ class MiniPlayerProvider extends ChangeNotifier {
   Timer? _connectionTimer;
   Timer? _deadTimer;
   Timer? _confirmTimer;
+  Timer? _stallTimer;
 
-  // --- Failover multi-sources ---
   List<String> _sources = [];
   int _sourceIndex = 0;
-  bool _exhausted = false; // toutes les sources testées sans succès
+  bool _exhausted = false;
 
-  bool _hasConnected = false; // mpv a commencé à recevoir des données
+  bool _hasConnected = false;
   bool _confirmedThisSession = false;
 
-  /// Timeout "jamais connecté" : faible=12s, normal=18s, élevé=30s.
+  /// Détection de stall : si aucun frame reçu pendant cette durée alors qu'on
+  /// jouait, on considère que le flux est mort et on tente une reconnexion.
+  static const _stallTimeout = 15;
+
   static const _deadTimeoutByLevel = [12, 18, 30];
   static const _pipChannel = MethodChannel('com.example.iptv/pip');
 
@@ -52,7 +55,6 @@ class MiniPlayerProvider extends ChangeNotifier {
   int get connectionSeconds => _connectionSeconds;
   bool get hasEverPlayed => _hasEverPlayed;
 
-  /// Source actuellement testée (1-based) et total, pour l'UI.
   int get currentSourceNumber => _sourceIndex + 1;
   int get totalSources => _sources.length;
 
@@ -69,7 +71,6 @@ class MiniPlayerProvider extends ChangeNotifier {
     return '';
   }
 
-  // Getters de compat UI
   int get retryCount => 0;
   bool get isRetrying => false;
   bool get hasExhaustedRetries => _exhausted;
@@ -78,12 +79,9 @@ class MiniPlayerProvider extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  void _createPlayer() {
-    _playingSub?.cancel();
-    _bufferSub?.cancel();
-    _widthSub?.cancel();
-    _errorSub?.cancel();
-    _player?.dispose();
+  /// Crée le player UNE SEULE FOIS. Les appels suivants le réutilisent.
+  void _ensurePlayer() {
+    if (_player != null) return;
 
     final level = AppStorage.getBufferLevel().clamp(0, 2);
     _player = Player(
@@ -97,6 +95,14 @@ class MiniPlayerProvider extends ChangeNotifier {
     _playingSub = _player!.stream.playing.listen((playing) {
       if (_disposed) return;
       _isPlaying = playing;
+
+      if (playing) {
+        // Lecture confirmée → on relance le stall detector.
+        _restartStallDetector();
+      } else {
+        _stallTimer?.cancel();
+      }
+
       _safeNotify();
     });
 
@@ -104,19 +110,17 @@ class MiniPlayerProvider extends ChangeNotifier {
       if (_disposed) return;
       _isBuffering = buffering;
 
-      // Si mpv bufferise, c'est qu'il EST connecté et télécharge des données.
       if (buffering && !_hasConnected) {
         _hasConnected = true;
         _deadTimer?.cancel();
         _deadTimer = null;
       }
 
-      // Auto-confirmation "fiable" : 30s de lecture fluide sans buffering.
       if (_hasEverPlayed && !_confirmedThisSession) {
         if (!buffering) {
           _confirmTimer?.cancel();
           _confirmTimer =
-              Timer(const Duration(seconds: 30), _autoConfirmChannel);
+              Timer(const Duration(seconds: 20), _autoConfirmChannel);
         } else {
           _confirmTimer?.cancel();
           _confirmTimer = null;
@@ -133,20 +137,53 @@ class MiniPlayerProvider extends ChangeNotifier {
         _hasEverPlayed = true;
         _hasConnected = true;
         _exhausted = false;
-        // Succès → on efface les strikes (decay) : la chaîne re-fonctionne.
         if (_currentChannel != null) {
           AppStorage.resetStrikes(_currentChannel!.id);
         }
         _cancelTimers();
+        _restartStallDetector();
         _safeNotify();
+      } else if (width != null && width > 0) {
+        // Flux déjà en cours → reset du stall timer (on reçoit des frames).
+        _restartStallDetector();
       }
     });
 
-    // Échec DUR (403/404/codec/réseau) → on bascule sur la source suivante.
     _errorSub = _player!.stream.error.listen((err) {
-      if (_disposed || _hasEverPlayed) return;
+      if (_disposed) return;
       debugPrint('[IPTV] Erreur sur source $currentSourceNumber: $err');
+
+      // Si on jouait déjà, on tente une reconnexion sur la même source.
+      if (_hasEverPlayed) {
+        debugPrint('[IPTV] Stall détecté via erreur → reconnexion');
+        _hasEverPlayed = false;
+        _hasConnected = false;
+        _connectionSeconds = 0;
+        _isBuffering = true;
+        _safeNotify();
+        _startConnectionTracking();
+        _openCurrentSource();
+        return;
+      }
+
       if (!_tryNextSource()) _onAllSourcesFailed(hard: true);
+    });
+  }
+
+  /// (Re)démarre le timer de détection de stall.
+  void _restartStallDetector() {
+    _stallTimer?.cancel();
+    _stallTimer = Timer(const Duration(seconds: _stallTimeout), () {
+      if (_disposed || !_hasEverPlayed) return;
+      debugPrint('[IPTV] Stall: aucun frame reçu pendant ${_stallTimeout}s '
+          '→ reconnexion sur même source');
+      _hasEverPlayed = false;
+      _hasConnected = false;
+      _connectionSeconds = 0;
+      _isBuffering = true;
+      _safeNotify();
+      _startConnectionTracking();
+      _openCurrentSource();
     });
   }
 
@@ -184,7 +221,8 @@ class MiniPlayerProvider extends ChangeNotifier {
     _connectionSeconds = 0;
     _isBuffering = true;
 
-    _createPlayer();
+    _ensurePlayer();
+    _cancelTimers();
     _safeNotify();
 
     await configureMpvForChannel(_player, channel);
@@ -195,10 +233,18 @@ class MiniPlayerProvider extends ChangeNotifier {
   void _openCurrentSource() {
     if (_player == null || _currentChannel == null) return;
     final url = _sources[_sourceIndex];
-    _player!.open(Media(url, httpHeaders: _buildHeaders(_currentChannel!)));
+    _player!
+        .open(Media(url, httpHeaders: _buildHeaders(_currentChannel!)))
+        .catchError((e) {
+      if (!_disposed) {
+        debugPrint('[IPTV] open() échoué: $e');
+        if (!_hasEverPlayed) {
+          if (!_tryNextSource()) _onAllSourcesFailed(hard: true);
+        }
+      }
+    });
   }
 
-  /// Passe à la source de secours suivante. Renvoie false si épuisé.
   bool _tryNextSource() {
     if (_sourceIndex + 1 >= _sources.length) return false;
     _sourceIndex++;
@@ -212,8 +258,6 @@ class MiniPlayerProvider extends ChangeNotifier {
     return true;
   }
 
-  /// Toutes les sources ont échoué. On ne pénalise (strike) que les échecs DURS.
-  /// Un flux lent/injoignable (soft) n'est jamais banni : il peut juste ramer.
   void _onAllSourcesFailed({required bool hard}) {
     _exhausted = true;
     if (hard && _currentChannel != null) {
@@ -236,8 +280,6 @@ class MiniPlayerProvider extends ChangeNotifier {
       _safeNotify();
     });
 
-    // Timer "jamais connecté" : si mpv n'a établi AUCUNE connexion, on tente la
-    // source suivante (sans strike : ce n'est peut-être qu'une chaîne lente).
     final timeout = _deadTimeout;
     _deadTimer = Timer(Duration(seconds: timeout), () {
       if (_disposed || _hasEverPlayed || _hasConnected) return;
@@ -251,14 +293,31 @@ class MiniPlayerProvider extends ChangeNotifier {
     _connectionTimer?.cancel();
     _deadTimer?.cancel();
     _confirmTimer?.cancel();
+    _stallTimer?.cancel();
     _connectionTimer = null;
     _deadTimer = null;
     _confirmTimer = null;
+    _stallTimer = null;
   }
 
   Future<void> retryChannel() async {
     if (_disposed || _currentChannel == null) return;
-    await playChannel(_currentChannel!);
+    final ch = _currentChannel!;
+
+    // Réutilise le player existant : on ouvre juste la même source à nouveau.
+    _hasEverPlayed = false;
+    _hasConnected = false;
+    _exhausted = false;
+    _confirmedThisSession = false;
+    _connectionSeconds = 0;
+    _isBuffering = true;
+
+    _cancelTimers();
+    _safeNotify();
+
+    await configureMpvForChannel(_player, ch);
+    _startConnectionTracking();
+    _openCurrentSource();
   }
 
   void minimizeToMini() {

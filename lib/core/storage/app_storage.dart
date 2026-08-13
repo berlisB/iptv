@@ -364,4 +364,70 @@ class AppStorage {
     final age = DateTime.now().millisecondsSinceEpoch - getDaddyliveCachedAt();
     return age < 3600000; // 1h
   }
+
+  // --- Historique VOD (films/séries/animés) ---
+  static const String _vodProgressKey = 'vod_progress';
+  static const String _vodWatchedKey = 'vod_watched';
+
+  /// Map<tmdbId, {season, episode, timestamp}>.
+  static Map<String, Map<String, dynamic>> _getVodProgress() {
+    final raw = _prefs.getString(_vodProgressKey);
+    if (raw == null) return {};
+    final decoded = jsonDecode(raw);
+    return (decoded as Map).map((k, v) =>
+        MapEntry(k.toString(), Map<String, dynamic>.from(v as Map)));
+  }
+
+  /// Sauvegarde la progression de lecture (dernier épisode regardé).
+  static Future<void> saveWatchProgress(int tmdbId,
+      {required int season, required int episode}) async {
+    final map = _getVodProgress();
+    map['$tmdbId'] = {
+      'season': season,
+      'episode': episode,
+      'ts': DateTime.now().millisecondsSinceEpoch,
+    };
+    await _prefs.setString(_vodProgressKey, jsonEncode(map));
+  }
+
+  /// Récupère la progression de lecture d'une série. Retourne null si aucune.
+  static Map<String, int>? getWatchProgress(int tmdbId) {
+    final entry = _getVodProgress()['$tmdbId'];
+    if (entry == null) return null;
+    return {
+      'season': entry['season'] as int,
+      'episode': entry['episode'] as int,
+    };
+  }
+
+  /// Set<episodeNumber> des épisodes déjà vus pour une sériedonnée.
+  static Set<int> getWatchedEpisodes(int tmdbId, {required int season}) {
+    final raw = _prefs.getString('${_vodWatchedKey}_$tmdbId');
+    if (raw == null) return {};
+    final all = Map<String, bool>.from(jsonDecode(raw));
+    return all.entries
+        .where((e) => e.value)
+        .map((e) => int.tryParse(e.key))
+        .whereType<int>()
+        .toSet();
+  }
+
+  /// Marque un épisode comme vu (ou non vu si `watched=false`).
+  static Future<void> setEpisodeWatched(int tmdbId,
+      {required int season,
+      required int episode,
+      bool watched = true}) async {
+    final key = '${_vodWatchedKey}_$tmdbId';
+    final raw = _prefs.getString(key);
+    final all = raw != null
+        ? Map<String, bool>.from(jsonDecode(raw))
+        : <String, bool>{};
+    all['$season:$episode'] = watched;
+    await _prefs.setString(key, jsonEncode(all));
+  }
+
+  /// Nombre d'épisodes vus dans une saison.
+  static int countWatchedInSeason(int tmdbId, int season) {
+    return getWatchedEpisodes(tmdbId, season: season).length;
+  }
 }

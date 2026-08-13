@@ -25,6 +25,7 @@ class HomeProvider extends ChangeNotifier {
   static const List<String> userCategories = [
     'Francophone',
     'Afrique francophone',
+    'TV Chine',
     'Infos',
     'Films & séries gratuits',
     'Documentaires',
@@ -85,6 +86,9 @@ class HomeProvider extends ChangeNotifier {
     // Adulte
     'xxx': 'Adulte 🔞', 'adult': 'Adulte 🔞', '+18': 'Adulte 🔞',
     'porn': 'Adulte 🔞',
+    // TV Chine
+    'tv chine': 'TV Chine', 'chinese': 'TV Chine', 'china': 'TV Chine',
+    'cctv': 'TV Chine', 'satellite': 'TV Chine',
   };
 
   // Known country names (used as group-title by many sources)
@@ -224,6 +228,12 @@ class HomeProvider extends ChangeNotifier {
             aud == AudienceFit.africaFrancophone;
       case 'Afrique francophone':
         return aud == AudienceFit.africaFrancophone;
+      case 'TV Chine':
+        return c.country.toLowerCase() == 'cn' ||
+            c.group.toLowerCase().contains('cctv') ||
+            c.group.toLowerCase().contains('china') ||
+            c.group.toLowerCase().contains('tv chine') ||
+            c.category.toLowerCase() == 'tv chine';
       case 'Anglais utile':
         return aud == AudienceFit.englishUseful;
       case 'Sans barrière de langue':
@@ -389,14 +399,30 @@ class HomeProvider extends ChangeNotifier {
 
   Future<void> _validateCatalogInBackground() async {
     if (_catalogChannels.isEmpty) return;
-    final statuses = await _channelService.validateBatch(_catalogChannels);
-    // Réinjecte les statuts/scores frais dans le catalogue.
-    _catalogChannels = _catalogChannels
-        .map((c) => c.copyWith(
-              status: statuses[c.id] ?? c.status,
-              reliabilityScore: AppStorage.getScore(c.id),
-            ))
-        .toList();
+    
+    // Valider en batches plus petits pour éviter les timeouts
+    const batchSize = 10;
+    for (var i = 0; i < _catalogChannels.length; i += batchSize) {
+      final batch = _catalogChannels.skip(i).take(batchSize).toList();
+      final statuses = await _channelService.validateBatch(batch, concurrency: 3);
+      
+      // Mettre à jour les chaînes au fur et à mesure
+      _catalogChannels = _catalogChannels
+          .map((c) => c.copyWith(
+                status: statuses[c.id] ?? c.status,
+                reliabilityScore: AppStorage.getScore(c.id),
+              ))
+          .toList();
+      
+      // Notifier l'UI après chaque batch pour montrer la progression
+      if (isReliableMode && i % 30 == 0) {
+        _recomputeBase();
+        _applyFilters();
+        notifyListeners();
+      }
+    }
+    
+    // Validation finale
     if (isReliableMode) {
       _recomputeBase();
       _applyFilters();
@@ -611,6 +637,9 @@ class HomeProvider extends ChangeNotifier {
       await AppStorage.removeFavorite(channelId);
     } else {
       await AppStorage.addFavorite(channelId);
+      // Auto-certifier les favoris comme vérifiés
+      await AppStorage.confirmChannel(channelId);
+      await AppStorage.markConfirmedNow(channelId);
     }
     notifyListeners();
   }

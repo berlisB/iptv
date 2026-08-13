@@ -44,19 +44,19 @@ class NavigatorBar extends StatelessWidget {
               label: 'Chaînes',
             ),
             NavigationDestination(
+              icon: Icon(Icons.movie_outlined, color: AppColor.textMuted),
+              selectedIcon: Icon(Icons.movie, color: AppColor.accentRed),
+              label: 'Films',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.tv_outlined, color: AppColor.textMuted),
+              selectedIcon: Icon(Icons.tv, color: AppColor.primaryColor),
+              label: 'Guide TV',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.favorite_outline, color: AppColor.textMuted),
               selectedIcon: Icon(Icons.favorite, color: AppColor.primaryColor),
               label: 'Favoris',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.verified_outlined, color: AppColor.textMuted),
-              selectedIcon: Icon(Icons.verified, color: AppColor.accentGreen),
-              label: 'Fiables',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.sports_esports_outlined, color: AppColor.textMuted),
-              selectedIcon: Icon(Icons.sports_esports, color: AppColor.accentRed),
-              label: 'Daddylive',
             ),
             NavigationDestination(
               icon: Icon(Icons.settings_outlined, color: AppColor.textMuted),

@@ -5,7 +5,9 @@ enum AppPage {
   favorites(path: '/favorites', name: 'Favorites'),
   reliable(path: '/reliable', name: 'Reliable'),
   daddylive(path: '/daddylive', name: 'Daddylive'),
-  settings(path: '/settings', name: 'Settings');
+  settings(path: '/settings', name: 'Settings'),
+  vod(path: '/vod', name: 'Vod'),
+  epg(path: '/epg', name: 'Epg');
 
   final String path;
   final String name;

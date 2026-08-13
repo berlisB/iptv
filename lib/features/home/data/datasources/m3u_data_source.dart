@@ -11,76 +11,73 @@ class M3uDataSource {
   static const String _internationalPlaylist = 'assets/playlists/international.m3u8';
   static const String _blocklistAsset = 'assets/playlists/blocklist.json';
 
-  // iptv-org master index (ALL channels in one file, ~8000+)
-  static const String _masterIndex =
-      'https://iptv-org.github.io/iptv/index.m3u';
-
   // Liste pré-vérifiée VIVANTE, régénérée toutes les 6h par la GitHub Action
   // tools/healthcheck.py (.github/workflows/healthcheck.yml). Sources 100%
   // légales uniquement. Chargée en 1er = chaînes les + fiables.
   static const String _verifiedIndex =
       'https://raw.githubusercontent.com/berlisB/iptv/main/verified.m3u';
 
-  // Free streaming services (FAST/AVOD)
-  // BuddyChewChew replaces old i.mjh.nz (DMCA'd by Warner Bros)
-  static const String _buddyBase =
-      'https://raw.githubusercontent.com/BuddyChewChew/app-m3u-generator/refs/heads/main/playlists';
-  static const String _apsattBase = 'https://www.apsattv.com';
+  // iptv-org : SEULEMENT les chaînes françaises (472 chaînes, pas le master 8000+)
+  static const String _iptvOrgFrench =
+      'https://iptv-org.github.io/iptv/languages/fra.m3u';
 
-  // Daddylive M3U (étude éducative) — événements sportifs en direct.
-  // Régénéré périodiquement par bestonkodi. URLs via dlhd.dad.
-  static const String _daddyliveM3U =
-      'https://tinyurl.com/bestonkodi-dlive';
-
-  static const List<String> _freeServices = [
-    // Free-TV (politique anti-abonnement explicite, ~100 pays)
-    'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
-    // freecasthub : UNIQUEMENT des endpoints CDN officiels (DW, France24, BBC
-    // Arabic/Persian, VOA, Al Jazeera, CGTN). Licence Unlicense, la + propre.
+  // --- Sources Fiables (françaises + internationales officielles) ---
+  static const List<String> _reliableSources = [
+    // Free-TV France (chaînes françaises officielles)
+    'https://raw.githubusercontent.com/Free-TV/IPTV/master/streams/fr.m3u',
+    // freecasthub : UNIQUEMENT des endpoints CDN officiels (DW, France24, BBC)
     'https://raw.githubusercontent.com/freecasthub/public-iptv/main/playlist.m3u',
-    // BuddyChewChew (Pluto, Samsung, Plex, Roku, Tubi)
-    '$_buddyBase/plutotv_all.m3u',
-    '$_buddyBase/samsungtvplus_all.m3u',
-    '$_buddyBase/plex_all.m3u',
-    '$_buddyBase/roku_all.m3u',
-    '$_buddyBase/tubi_all.m3u',
-    // Xumo
-    'https://raw.githubusercontent.com/BuddyChewChew/xumo-playlist-generator/refs/heads/main/playlists/xumo_playlist.m3u',
-    // apsattv.com FAST services
-    '$_apsattBase/distro.m3u',
-    '$_apsattBase/localnow.m3u',
-    '$_apsattBase/vidaa.m3u',
-    '$_apsattBase/vizio.m3u',
-    '$_apsattBase/tclplus.m3u',
-    // LG Channels France
-    '$_apsattBase/frlg.m3u',
-    // NOTE : i.mjh.nz/all/raw-tv.m3u8 retiré — DMCA'd par Warner Bros (08/2024),
-    // renvoie 404. Remplacé par les broadcasters officiels ci-dessous.
+    // LG Channels France (chaînes françaises via LG FAST)
+    'https://www.apsattv.com/frlg.m3u',
+  ];
+
+  // --- Sources IPTV Chine (box chinoises) ---
+  // CDN Mobile/Unicom/Telecom + sources communautaires GitHub
+  static const List<String> _chineseIptvSources = [
+    // CCSH/IPTV : CCTV + régions, mise à jour auto, logo + EPG
+    'https://raw.githubusercontent.com/CCSH/IPTV/refs/heads/main/live.m3u',
+    // vbskycn/iptv :央视+卫视+地方台, IPv4, auto-scanné toutes les 6h
+    'https://live.zbds.top/tv/iptv4.m3u',
+    // fanmingming/live : source communautaire populaire
+    'https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u',
+    // yifoo/autoiptv :精简合并版央视+卫视
+    'https://raw.githubusercontent.com/yifoo/autoiptv/main/merged/%E7%B2%BE%E7%AE%80%E7%89%88.m3u',
+    // BurningC4/Chinese-IPTV : CCTV IPV4
+    'https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/main/tv.m3u',
   ];
 
   /// Tier 1 — HLS officiels des diffuseurs (les + fiables : CDN direct, pas de
   /// scraping, 100% légal/FTA). Flux uniques injectés comme un M3U curé.
-  /// URL vérifiées 06/2026. En cas de rotation d'ID, iptv-org/api/streams.json
-  /// les maintient à jour (sauf NASA, stable de son côté).
+  /// URL vérifiées 06/2026.
   static const String _officialBroadcasters = '''
 #EXTM3U
-#EXTINF:-1 tvg-id="NASATV.us" group-title="Officiel",NASA TV
-https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
-#EXTINF:-1 tvg-id="EuronewsEnglish.fr" group-title="Officiel",Euronews English
-https://cdn-euronews.akamaized.net/live/eds/euronews-en/25002/index.m3u8
-#EXTINF:-1 tvg-id="EuronewsFrench.fr" group-title="Officiel",Euronews Français
-https://cdn-euronews.akamaized.net/live/eds/euronews-fr/25026/index.m3u8
-#EXTINF:-1 tvg-id="DWEnglish.de" group-title="Officiel",DW English
-https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/master.m3u8
-#EXTINF:-1 tvg-id="France24English.fr" group-title="Officiel",France 24 English
-https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8
-#EXTINF:-1 tvg-id="France24French.fr" group-title="Officiel",France 24 Français
+#EXTINF:-1 tvg-id="Arte.fr" group-title="France",Arte
+https://artesimulcast.akamaized.net/hls/live/2031003/artelive_fr/index.m3u8
+#EXTINF:-1 tvg-id="France5.fr" group-title="France",France 5
+https://s13.tntendirect.com/france5/live/playlist.m3u8
+#EXTINF:-1 tvg-id="France24French.fr" group-title="France",France 24 Français
 https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8
-#EXTINF:-1 tvg-id="AlJazeeraEnglish.qa" group-title="Officiel",Al Jazeera English
+#EXTINF:-1 tvg-id="France24English.fr" group-title="France",France 24 English
+https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8
+#EXTINF:-1 tvg-id="EuronewsFrench.fr" group-title="France",Euronews Français
+https://cdn-euronews.akamaized.net/live/eds/euronews-fr/25026/index.m3u8
+#EXTINF:-1 tvg-id="EuronewsEnglish.fr" group-title="France",Euronews English
+https://cdn-euronews.akamaized.net/live/eds/euronews-en/25002/index.m3u8
+#EXTINF:-1 tvg-id="TV5MondeFBS.fr" group-title="France",TV5 Monde FBS
+https://ott.tv5monde.com/Content/HLS/Live/channel(fbs)/index.m3u8
+#EXTINF:-1 tvg-id="TV5MondeInfo.fr" group-title="France",TV5 Monde Info
+https://ott.tv5monde.com/Content/HLS/Live/channel(info)/index.m3u8
+#EXTINF:-1 tvg-id="BFMTV.fr" group-title="France",BFMTV
+https://bcovlive-a.akamaihd.net/f3c53617100e4fd7a0fbdf9e784a650e/eu-central-1/876450610001/playlist.m3u8
+#EXTINF:-1 tvg-id="DWEnglish.de" group-title="International",DW English
+https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/master.m3u8
+#EXTINF:-1 tvg-id="AlJazeeraEnglish.qa" group-title="International",Al Jazeera English
 https://live-hls-web-aje.getaj.net/AJE/index.m3u8
-#EXTINF:-1 tvg-id="AlJazeera.qa" group-title="Officiel",Al Jazeera Arabic
+#EXTINF:-1 tvg-id="AlJazeera.qa" group-title="International",Al Jazeera Arabic
 https://live-hls-web-aja.getaj.net/AJA-V3/index.m3u8
-#EXTINF:-1 tvg-id="ABCNewsLive.us" group-title="Officiel",ABC News Live
+#EXTINF:-1 tvg-id="NASATV.us" group-title="International",NASA TV
+https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
+#EXTINF:-1 tvg-id="ABCNewsLive.us" group-title="International",ABC News Live
 https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u8
 ''';
 
@@ -102,28 +99,35 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
     return null;
   }
 
-  /// Fetch iptv-org master index (all 8000+ channels in 1 request)
-  static Future<String> fetchMasterIndex() async {
-    final result = await _fetchPlaylist(_masterIndex);
-    return result ?? '';
-  }
-
   /// Fetch la liste pré-vérifiée vivante (régénérée toutes les 6h par CI).
-  /// Vide tant que la 1ère Action n'a pas tourné — non bloquant.
   static Future<String> fetchVerifiedIndex() async {
     final result = await _fetchPlaylist(_verifiedIndex);
     return result ?? '';
   }
 
-  /// Fetch free streaming services in parallel (non-blocking)
-  static Future<String> fetchFreeServices() async {
-    // Use individual timeouts per fetch (already 30s each in _fetchPlaylist).
-    // Don't let one slow source block others.
-    final futures = _freeServices.map((url) =>
+  /// Fetch les chaînes françaises iptv-org (472 chaînes, pas le master 8000+)
+  static Future<String> fetchIptvOrgFrench() async {
+    final result = await _fetchPlaylist(_iptvOrgFrench);
+    return result ?? '';
+  }
+
+  /// Fetch les sources fiables (françaises + CDN officiels)
+  static Future<String> fetchReliableSources() async {
+    final futures = _reliableSources.map((url) =>
         _fetchPlaylist(url).catchError((_) => null as String?));
     final results = await Future.wait(futures);
     final loaded = results.where((r) => r != null).length;
-    debugPrint('[IPTV] Free services: $loaded/${_freeServices.length} loaded');
+    debugPrint('[IPTV] Reliable: $loaded/${_reliableSources.length} loaded');
+    return results.where((r) => r != null).join('\n');
+  }
+
+  /// Fetch sources IPTV chinoises (CDN Mobile/Unicom/Telecom + GitHub)
+  static Future<String> fetchChineseIptv() async {
+    final futures = _chineseIptvSources.map((url) =>
+        _fetchPlaylist(url).catchError((_) => null as String?));
+    final results = await Future.wait(futures);
+    final loaded = results.where((r) => r != null).length;
+    debugPrint('[IPTV] Chinese IPTV: $loaded/${_chineseIptvSources.length} loaded');
     return results.where((r) => r != null).join('\n');
   }
 
@@ -134,22 +138,16 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
     return '$fr\n$intl';
   }
 
-  /// Fetch daddylive M3U (optionnel, étude éducative)
-  static Future<String> fetchDaddyliveM3U() async {
-    final result = await _fetchPlaylist(_daddyliveM3U);
-    return result ?? '';
-  }
-
   /// Load all sources
   static Future<String> loadAllPlaylists() async {
     final parts = <String>[];
 
     try {
       final results = await Future.wait([
-        fetchVerifiedIndex(), // pré-vérifiées vivantes (en 1er = + fiables)
-        fetchMasterIndex(),
-        fetchFreeServices(),
-        fetchDaddyliveM3U(), // M3U daddylive (événements sportifs)
+        fetchVerifiedIndex(),       // pré-vérifiées vivantes (en 1er = + fiables)
+        fetchIptvOrgFrench(),       // chaînes françaises iptv-org
+        fetchReliableSources(),     // sources fiables (françaises + CDN officiels)
+        fetchChineseIptv(),         // IPTV chinoises (CCTV + régions)
       ]).timeout(const Duration(seconds: 60));
 
       for (final result in results) {
