@@ -107,33 +107,8 @@ class AppStorage {
     return (_prefs.getStringList(_localBlocklistKey) ?? []).toSet();
   }
 
-  static Future<void> addToBlocklist(String url) async {
-    final list = _prefs.getStringList(_localBlocklistKey) ?? [];
-    if (!list.contains(url)) {
-      list.add(url);
-      await _prefs.setStringList(_localBlocklistKey, list);
-    }
-  }
-
-  static Future<void> removeFromBlocklist(String url) async {
-    final list = _prefs.getStringList(_localBlocklistKey) ?? [];
-    list.remove(url);
-    await _prefs.setStringList(_localBlocklistKey, list);
-  }
-
   static Future<void> clearLocalBlocklist() async {
     await _prefs.remove(_localBlocklistKey);
-  }
-
-  // Volume
-  static const String _volumeKey = 'volume';
-
-  static Future<void> setVolume(double volume) async {
-    await _prefs.setDouble(_volumeKey, volume);
-  }
-
-  static double getVolume() {
-    return _prefs.getDouble(_volumeKey) ?? 100.0;
   }
 
   // Settings toggles
@@ -240,10 +215,6 @@ class AppStorage {
   static bool isDead(String channelId) =>
       getStrikes(channelId) >= strikeThreshold;
 
-  static Future<void> clearStrikes() async {
-    await _prefs.remove(_strikesKey);
-  }
-
   // --- Score de fiabilité (0..100, decay graduel) ---------------------------
   // Complète les "strikes" (binaire mort/vivant) par un score continu utilisé
   // pour classer et masquer. Règles centralisées dans CurationConfig.
@@ -286,15 +257,6 @@ class AppStorage {
   static Future<void> recordHardFail(String channelId) async {
     await _applyDelta(channelId, -CurationConfig.penaltyHardFail);
     await addStrike(channelId);
-  }
-
-  /// True si le score est sous le seuil "Sélection fiable".
-  static bool isBelowReliableThreshold(String channelId) =>
-      getScore(channelId) < CurationConfig.reliableThreshold;
-
-  static Future<void> clearScores() async {
-    await _prefs.remove(_scoreKey);
-    await _prefs.remove(_checkedAtKey);
   }
 
   // Horodatage de la dernière vérification de flux.
@@ -405,9 +367,10 @@ class AppStorage {
     final raw = _prefs.getString('${_vodWatchedKey}_$tmdbId');
     if (raw == null) return {};
     final all = Map<String, bool>.from(jsonDecode(raw));
+    final prefix = '$season:';
     return all.entries
-        .where((e) => e.value)
-        .map((e) => int.tryParse(e.key))
+        .where((e) => e.value && e.key.startsWith(prefix))
+        .map((e) => int.tryParse(e.key.substring(prefix.length)))
         .whereType<int>()
         .toSet();
   }

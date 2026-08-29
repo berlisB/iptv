@@ -83,6 +83,8 @@ class AppRouter {
         path: AppPage.player.path,
         name: AppPage.player.name,
         parentNavigatorKey: _rootNavigatorKey,
+        redirect: (context, state) =>
+            state.extra is ChannelEntity ? null : AppPage.home.path,
         builder: (context, state) {
           final channel = state.extra as ChannelEntity;
           return PlayerScreen(channel: channel);

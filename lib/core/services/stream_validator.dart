@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 
 /// Résultat d'un probe réseau d'un flux.
 enum ProbeOutcome { ok, timeout, forbidden, notFound, error }
@@ -47,21 +46,4 @@ class StreamValidator {
     }
   }
 
-  /// Probe la chaîne (URL principale puis secours) et renvoie le statut déduit.
-  /// Le 1er flux vivant suffit à considérer la chaîne en ligne.
-  Future<ChannelStatus> validateChannel(ChannelEntity channel) async {
-    for (final url in channel.allUrls) {
-      final outcome = await probe(url, headers: _headersFor(channel));
-      if (outcome == ProbeOutcome.ok) return ChannelStatus.online;
-    }
-    return ChannelStatus.offline;
-  }
-
-  Map<String, String>? _headersFor(ChannelEntity c) {
-    if (!c.httpHeaders.hasHeaders) return null;
-    return {
-      if (c.httpHeaders.referrer != null) 'Referer': c.httpHeaders.referrer!,
-      if (c.httpHeaders.httpOrigin != null) 'Origin': c.httpHeaders.httpOrigin!,
-    };
-  }
 }

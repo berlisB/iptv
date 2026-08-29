@@ -8,13 +8,19 @@ import 'package:iptv/features/vod/domain/media_entity.dart';
 class TmdbService {
   TmdbService._();
 
-  // Clé API TMDb (lecture seule, usage non-commercial)
-  // Remplacer par ta propre clé sur https://www.themoviedb.org/settings/api
   static const String _baseUrl = 'https://api.themoviedb.org/3';
 
+  // Token TMDb v4 (lecture seule, usage non-commercial). Injectable à la
+  // compilation : flutter build … --dart-define=TMDB_API_KEY=<token>
+  // Créer le sien sur https://www.themoviedb.org/settings/api
+  static const String _apiToken = String.fromEnvironment(
+    'TMDB_API_KEY',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlNzZhM2JhNDEwMTk1YjZiODliMDFkNzE1ZjBkNmVlOCIsIm5iZiI6MTc4MTU0ODM4My4wMTksInN1YiI6IjZhMzA0NTVmNWU5NDM4NzhlMzY1NTEzMSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.0pxuGhDNUlgocxUPhvMoaOzJXWmkyWTMotAJTw8So7M',
+  );
+
   static const _headers = {
-    'Authorization':
-        'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlNzZhM2JhNDEwMTk1YjZiODliMDFkNzE1ZjBkNmVlOCIsIm5iZiI6MTc4MTU0ODM4My4wMTksInN1YiI6IjZhMzA0NTVmNWU5NDM4NzhlMzY1NTEzMSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.0pxuGhDNUlgocxUPhvMoaOzJXWmkyWTMotAJTw8So7M',
+    'Authorization': 'Bearer $_apiToken',
     'Content-Type': 'application/json;charset=utf-8',
   };
 

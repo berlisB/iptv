@@ -14,9 +14,6 @@ dependencies:
   # State Management
   provider: ^6.1.5+1
 
-  # Dependency Injection
-  get_it: ^9.2.0
-
   # Navigation
   go_router: ^17.1.0
 
@@ -44,7 +41,6 @@ dependencies:
 
   # Utils
   equatable: ^2.0.7
-  dartz: ^0.10.1
   cupertino_icons: ^1.0.8
 
   # EPG (parsing XMLTV en streaming)

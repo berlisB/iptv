@@ -311,6 +311,33 @@ class _VodPlayerScreenState extends State<VodPlayerScreen> {
       )
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (request) {
+            final uri = Uri.tryParse(request.url);
+
+            // Refuse les schémas non http(s) (intent://, custom://…) utilisés
+            // par les ad-farms pour ouvrir des apps de paris / pub.
+            if (uri == null ||
+                (uri.scheme != 'http' && uri.scheme != 'https')) {
+              debugPrint('[VodPlayer] Bloqué (schéma non-http): ${uri?.scheme}');
+              return NavigationDecision.prevent;
+            }
+            final host = uri.host.toLowerCase();
+
+            // Refuse les domaines de détournement / paris / pubs.
+            const blockedHosts = [
+              '1xbet',
+              'streamingnow.mov',
+              'adsco.re',
+              'googlesyndication',
+              'doubleclick',
+            ];
+            if (blockedHosts.any((b) => host.contains(b))) {
+              debugPrint('[VodPlayer] Bloqué (domaine parasite): $host');
+              return NavigationDecision.prevent;
+            }
+
+            return NavigationDecision.navigate;
+          },
           onPageStarted: (_) {
             if (mounted) setState(() => _isLoading = true);
           },
@@ -322,6 +349,12 @@ class _VodPlayerScreenState extends State<VodPlayerScreen> {
           },
           onWebResourceError: (error) {
             debugPrint('[VodPlayer] WebView error: ${error.description}');
+            if (mounted && error.isForMainFrame == true) {
+              setState(() {
+                _hasError = true;
+                _errorMessage = 'Source de lecture indisponible.';
+              });
+            }
           },
         ),
       )

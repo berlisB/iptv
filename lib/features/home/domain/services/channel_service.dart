@@ -39,7 +39,9 @@ class ChannelService {
   /// Ne supprime jamais une chaîne : seul le score bouge (decay/récompense).
   Future<ChannelStatus> validateAndScore(ChannelEntity channel) async {
     final headers = _headersFor(channel);
-    var status = ChannelStatus.offline;
+    // offline seulement si au moins un échec dur (403/404) ; des échecs
+    // uniquement mous (timeout/erreur réseau) laissent le statut unknown.
+    var status = ChannelStatus.unknown;
 
     for (final url in channel.allUrls) {
       final outcome = await _validator.probe(url, headers: headers);
@@ -50,6 +52,7 @@ class ChannelService {
         case ProbeOutcome.forbidden:
         case ProbeOutcome.notFound:
           await AppStorage.recordHardFail(channel.id);
+          status = ChannelStatus.offline;
         case ProbeOutcome.timeout:
           await AppStorage.recordTimeout(channel.id);
         case ProbeOutcome.error:
