@@ -1,0 +1,6 @@
+name = "iptv-edge"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# Déploiement : npx wrangler deploy  (depuis worker/)
+# Dev local   : npx wrangler dev
