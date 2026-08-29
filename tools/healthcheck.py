@@ -78,6 +78,11 @@ FREE_SERVICES = [
     f"{APSATT}/tclplus.m3u",
     f"{APSATT}/frlg.m3u",
 ]
+# Flux adultes (promos gratuites de réseaux cam). Catégorie forcée
+# 'Adulte 🔞' → masqués par défaut dans l'app (toggle Réglages).
+ADULT_SOURCES = [
+    "http://adultiptv.net/chs.m3u8",
+]
 MASTER_INDEX = "https://iptv-org.github.io/iptv/index.m3u"
 
 UA = {"User-Agent": "iptv-healthcheck/1.0 (+https://github.com/berlisB/iptv)"}
@@ -185,6 +190,9 @@ NAME_KEYWORDS = [
       "western", "hollywood"), "Films & Séries"),
     (("cook", "food", "travel", "fashion", "home", "lifestyle"), "Lifestyle"),
     (("comedy", "humor", "fun ", "gameshow", "reality"), "Divertissement"),
+    (("xxx", "porn", "adult", "18+", "milf", "erotic", "erotik", "babes",
+      "playboy", "hustler", "dorcel", "redlight", "venus", "cam girl",
+      "camtv", "naked"), "Adulte 🔞"),
 ]
 
 _QUALITY_RE = re.compile(
@@ -226,6 +234,14 @@ def parse_extinf(line):
     name_match = re.search(r'(?:"|:-?\d+)\s*,\s*(.+)$', line)
     meta["name"] = (name_match.group(1) if name_match else "").strip()
     return meta
+
+
+def tag_adult(ext):
+    """Force group-title="XXX" sur les EXTINF des sources adultes, pour que
+    verified.m3u soit lui aussi filtré par le toggle adulte de l'app."""
+    if 'group-title="' in ext:
+        return re.sub(r'group-title="[^"]*"', 'group-title="XXX"', ext)
+    return re.sub(r"^(#EXTINF:[^,]*),", r'\1 group-title="XXX",', ext, count=1)
 
 
 def provider_for(source_url, stream_url):
@@ -285,6 +301,8 @@ def build_catalog(alive):
         entry = by_id.get(cid)
         if entry is None:
             country, category = classify(meta)
+            if src in ADULT_SOURCES:
+                category = "Adulte 🔞"
             lang = meta["language"].split(";")[0].strip().lower()
             by_id[cid] = {
                 "id": cid,
@@ -442,7 +460,7 @@ async def main():
     connector = aiohttp.TCPConnector(limit=concurrency, ssl=False)
     async with aiohttp.ClientSession(connector=connector) as session:
         # 1) récupérer toutes les playlists sources
-        sources = list(FREE_SERVICES)
+        sources = list(FREE_SERVICES) + list(ADULT_SOURCES)
         if include_master:
             sources.append(MASTER_INDEX)
         texts = await asyncio.gather(*(fetch_text(session, u) for u in sources))
@@ -450,7 +468,10 @@ async def main():
         # triplets (extinf, url, source) — la source sert à déduire le provider
         pairs = [(e, u, "official") for e, u in parse_m3u(OFFICIAL_BROADCASTERS)]
         for src, t in zip(sources, texts):
-            pairs += [(e, u, src) for e, u in parse_m3u(t)]
+            if src in ADULT_SOURCES:
+                pairs += [(tag_adult(e), u, src) for e, u in parse_m3u(t)]
+            else:
+                pairs += [(e, u, src) for e, u in parse_m3u(t)]
 
         # 2) dédup par URL en gardant l'ordre (officiels d'abord)
         seen = set()

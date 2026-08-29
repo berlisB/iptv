@@ -37,7 +37,8 @@ jobs:
       - name: Run health-check
         env:
           INCLUDE_MASTER: ${{ inputs.include_master && '1' || '' }}
-          CONCURRENCY: "80"
+          MAX_CHANNELS: "16000"
+          CONCURRENCY: "100"
           TIMEOUT: "8"
         run: python tools/healthcheck.py
 
