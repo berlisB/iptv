@@ -190,9 +190,11 @@ class MiniPlayerProvider extends ChangeNotifier {
   void _autoConfirmChannel() {
     if (_disposed || _currentChannel == null || _confirmedThisSession) return;
     _confirmedThisSession = true;
-    AppStorage.confirmChannel(_currentChannel!.id);
-    AppStorage.markConfirmedNow(_currentChannel!.id);
-    debugPrint('[IPTV] Chaîne fiable confirmée: ${_currentChannel!.name}');
+    // 20 s de lecture sans coupure = meilleur signal de fiabilité qui soit :
+    // il alimente le score persistant (source unique de vérité).
+    AppStorage.recordSuccess(_currentChannel!.id);
+    debugPrint('[IPTV] Lecture stable, score récompensé: '
+        '${_currentChannel!.name}');
   }
 
   Map<String, String>? _buildHeaders(ChannelEntity channel) {

@@ -13,21 +13,25 @@ class EpgProvider extends ChangeNotifier {
 
   /// Charge le guide pour les chaînes demandées (non bloquant, à appeler après
   /// le chargement des chaînes). Ne recharge pas si déjà fait.
-  Future<void> load(Set<String> wantedIds) async {
+  /// [packs] : guides à interroger (défaut FR) — cf. EpgService.packUrls.
+  Future<void> load(Set<String> wantedIds, {List<String>? packs}) async {
     if (_loading || _loaded || wantedIds.isEmpty) return;
     _loading = true;
     notifyListeners();
 
-    _byChannel = await EpgService.fetch(wantedIds: wantedIds);
+    _byChannel = await EpgService.fetchPacks(
+      wantedIds: wantedIds,
+      packs: packs ?? const ['fr1'],
+    );
     _loaded = true;
     _loading = false;
     notifyListeners();
   }
 
   /// Force un rechargement (ex: changement de jour).
-  Future<void> refresh(Set<String> wantedIds) async {
+  Future<void> refresh(Set<String> wantedIds, {List<String>? packs}) async {
     _loaded = false;
-    await load(wantedIds);
+    await load(wantedIds, packs: packs);
   }
 
   /// Programme en cours + suivant pour une chaîne (vide si pas de guide).

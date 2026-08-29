@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
             .map((c) => c.tvgId)
             .where((id) => id.isNotEmpty)
             .toSet();
-        context.read<EpgProvider>().load(ids);
+        context.read<EpgProvider>().load(ids, packs: hp.epgPacks);
       });
     });
   }

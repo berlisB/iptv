@@ -126,62 +126,6 @@ class AppStorage {
   static int getBufferLevel() => _prefs.getInt(_bufferLevelKey) ?? 1;
   static Future<void> setBufferLevel(int v) => _prefs.setInt(_bufferLevelKey, v);
 
-  // Confirmed (reliable) channels
-  static const String _confirmedKey = 'confirmed_channels';
-
-  static Set<String> getConfirmedChannels() {
-    return (_prefs.getStringList(_confirmedKey) ?? []).toSet();
-  }
-
-  static bool isConfirmed(String channelId) {
-    return getConfirmedChannels().contains(channelId);
-  }
-
-  static Future<void> confirmChannel(String channelId) async {
-    final list = _prefs.getStringList(_confirmedKey) ?? [];
-    if (!list.contains(channelId)) {
-      list.add(channelId);
-      await _prefs.setStringList(_confirmedKey, list);
-    }
-  }
-
-  static Future<void> unconfirmChannel(String channelId) async {
-    final list = _prefs.getStringList(_confirmedKey) ?? [];
-    list.remove(channelId);
-    await _prefs.setStringList(_confirmedKey, list);
-  }
-
-  static Future<void> clearConfirmedChannels() async {
-    await _prefs.remove(_confirmedKey);
-    await _prefs.remove(_confirmedAtKey);
-  }
-
-  // --- Fraîcheur des chaînes fiables (decay) ---
-  // Une chaîne confirmée "fiable" il y a plus de 7 jours doit être re-testée.
-  static const String _confirmedAtKey = 'confirmed_at';
-  static const int _reliableTtlMs = 7 * 24 * 60 * 60 * 1000;
-
-  static Map<String, int> _getConfirmedAt() {
-    final raw = _prefs.getString(_confirmedAtKey);
-    if (raw == null) return {};
-    return Map<String, int>.from(jsonDecode(raw));
-  }
-
-  // Mémorise l'instant de confirmation pour pouvoir faire expirer la fiabilité.
-  static Future<void> markConfirmedNow(String channelId) async {
-    final map = _getConfirmedAt();
-    map[channelId] = DateTime.now().millisecondsSinceEpoch;
-    await _prefs.setString(_confirmedAtKey, jsonEncode(map));
-  }
-
-  // Retourne true si la confirmation est encore fraîche (< TTL).
-  static bool isReliableFresh(String channelId, {int? nowMs}) {
-    final at = _getConfirmedAt()[channelId];
-    if (at == null) return true; // ancienne confirmation sans date → on garde
-    final now = nowMs ?? DateTime.now().millisecondsSinceEpoch;
-    return (now - at) < _reliableTtlMs;
-  }
-
   // --- Strikes : échecs DURS répétés (403/404/codec/DNS), jamais la lenteur ---
   static const String _strikesKey = 'channel_strikes';
   static const int strikeThreshold = 3; // banni seulement au-delà

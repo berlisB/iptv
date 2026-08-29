@@ -28,9 +28,9 @@ class CurationConfig {
   };
 
   /// Catégories exclues par défaut (comparaison insensible à la casse).
-  static const Set<String> excludedCategories = {
-    'adulte', 'adult', 'xxx', '+18',
-  };
+  /// NB : l'adulte n'est PAS exclu ici — il est masqué par le toggle
+  /// « Contenu adulte » des Réglages (_applyFilters), pour rester activable.
+  static const Set<String> excludedCategories = {};
 
   /// Marqueurs de nom/groupe trahissant une langue exclue quand le tag
   /// `tvg-language` est absent (fréquent sur les sources brutes).
@@ -38,7 +38,7 @@ class CurationConfig {
     'arabic', 'arabia', 'بث', 'قناة', // arabe
     'indonesia', 'tvri', // indonésien
     'hindi', 'bharat', // hindi
-    'türk', 'turk', 'kanal', // turc
+    'türk', 'turk', // turc ('kanal' retiré : trop générique, exclut Kanal D…)
     'россия', 'russia', 'тв', // russe
     'iran', 'irib', 'persian', // persan
   };

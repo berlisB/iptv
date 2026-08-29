@@ -1,3 +1,4 @@
+import 'package:iptv/core/utils/stable_id.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 
 class M3uParser {
@@ -80,10 +81,12 @@ class M3uParser {
           ignoreSSL = true;
         }
       } else if (line.isNotEmpty && !line.startsWith('#')) {
-        // URL line - create the channel
-        var id = tvgId.isNotEmpty ? tvgId : '${name}_${channels.length}';
+        // URL line - create the channel.
+        // ID stable (partagé avec le pipeline) : favoris/scores/récents
+        // survivent aux redémarrages et aux réordonnancements de sources.
+        var id = stableChannelId(tvgId: tvgId, name: name);
         while (usedIds.contains(id)) {
-          id = '${id}_${channels.length}';
+          id = '${id}_dup'; // doublon intra-parse, fusionné ensuite par identité
         }
         usedIds.add(id);
 

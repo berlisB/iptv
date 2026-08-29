@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:iptv/core/services/m3u_parser.dart';
+import 'package:iptv/core/utils/stable_id.dart';
 import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/data/datasources/daddylive_service.dart';
 import 'package:iptv/features/home/data/datasources/m3u_data_source.dart';
@@ -88,7 +89,7 @@ class HomeProvider extends ChangeNotifier {
     'porn': 'Adulte 🔞',
     // TV Chine
     'tv chine': 'TV Chine', 'chinese': 'TV Chine', 'china': 'TV Chine',
-    'cctv': 'TV Chine', 'satellite': 'TV Chine',
+    'cctv': 'TV Chine',
   };
 
   // Known country names (used as group-title by many sources)
@@ -180,6 +181,24 @@ class HomeProvider extends ChangeNotifier {
 
   /// Union catalogue + brut (résolution par id : favoris, récents, EPG, fiables).
   List<ChannelEntity> get allChannels => _lookupPool;
+
+  /// Packs EPG utiles selon les chaînes chargées (cf. EpgService.packUrls).
+  /// Les flux Pluto/Samsung passent par les redirections jmp2.uk, dont les
+  /// tvg-id correspondent aux ids des guides i.mjh.nz.
+  List<String> get epgPacks {
+    var hasPluto = false;
+    var hasSamsung = false;
+    for (final c in _lookupPool) {
+      if (c.url.contains('jmp2.uk/plu-')) hasPluto = true;
+      if (c.url.contains('jmp2.uk/stvp-')) hasSamsung = true;
+      if (hasPluto && hasSamsung) break;
+    }
+    return [
+      'fr1',
+      if (hasPluto) 'pluto-fr',
+      if (hasSamsung) 'samsung-fr',
+    ];
+  }
 
   /// Sources brutes uniquement (mode Explorer).
   List<ChannelEntity> get rawChannels => _allChannels;
@@ -382,6 +401,13 @@ class HomeProvider extends ChangeNotifier {
     _rebuildGroups();
   }
 
+  /// Catégories canoniques déjà représentées par un chip de [userCategories]
+  /// (ex. 'Actualités' est servi par le chip 'Infos') — pas de doublon.
+  static const Set<String> _coveredByUserCategories = {
+    'Actualités', 'Films & Séries', 'Documentaires', 'Sport', 'Musique',
+    'Enfants', 'TV Chine',
+  };
+
   /// Construit les groupes par catégorie orientée usage à partir de la base.
   void _rebuildGroups() {
     final groups = <ChannelGroup>[];
@@ -392,6 +418,30 @@ class HomeProvider extends ChangeNotifier {
         groups.add(ChannelGroup(name: cat, channels: channels));
       }
     }
+
+    // Chips dynamiques : catégories du catalogue v3 non couvertes par les
+    // chips éditoriaux (Divertissement, Général, Lifestyle…), par volume ↓.
+    final showAdult = AppStorage.getShowAdult();
+    final extraCounts = <String, int>{};
+    for (final c in _modeBase) {
+      final cat = categoryOf(c);
+      if (cat == 'Autres' ||
+          _coveredByUserCategories.contains(cat) ||
+          userCategories.contains(cat)) {
+        continue;
+      }
+      if (cat == 'Adulte 🔞' && !showAdult) continue;
+      extraCounts[cat] = (extraCounts[cat] ?? 0) + 1;
+    }
+    final extras = extraCounts.keys.toList()
+      ..sort((a, b) => extraCounts[b]!.compareTo(extraCounts[a]!));
+    for (final cat in extras) {
+      groups.add(ChannelGroup(
+        name: cat,
+        channels: _modeBase.where((c) => categoryOf(c) == cat).toList(),
+      ));
+    }
+
     _groups = groups;
     debugPrint('[IPTV] Mode=$_mode base=${_modeBase.length} '
         'catégories=${_groups.length}');
@@ -399,30 +449,38 @@ class HomeProvider extends ChangeNotifier {
 
   Future<void> _validateCatalogInBackground() async {
     if (_catalogChannels.isEmpty) return;
-    
-    // Valider en batches plus petits pour éviter les timeouts
+
+    // Le catalogue v3 est déjà vérifié par la CI (< 6 h). On ne re-sonde côté
+    // client qu'un échantillon utile : les chaînes éditoriales/officielles,
+    // les favoris et la tête de liste — jamais les ~6000 chaînes.
+    final favorites = AppStorage.getFavorites().toSet();
+    final sample = <ChannelEntity>[
+      for (final c in _catalogChannels)
+        if (c.isOfficial || favorites.contains(c.id)) c,
+      ..._catalogChannels.take(100),
+    ];
+    final seen = <String>{};
+    final toValidate = [
+      for (final c in sample)
+        if (seen.add(c.id)) c,
+    ];
+
     const batchSize = 10;
-    for (var i = 0; i < _catalogChannels.length; i += batchSize) {
-      final batch = _catalogChannels.skip(i).take(batchSize).toList();
-      final statuses = await _channelService.validateBatch(batch, concurrency: 3);
-      
-      // Mettre à jour les chaînes au fur et à mesure
+    for (var i = 0; i < toValidate.length; i += batchSize) {
+      final batch = toValidate.skip(i).take(batchSize).toList();
+      final statuses =
+          await _channelService.validateBatch(batch, concurrency: 3);
+
       _catalogChannels = _catalogChannels
-          .map((c) => c.copyWith(
-                status: statuses[c.id] ?? c.status,
-                reliabilityScore: AppStorage.getScore(c.id),
-              ))
+          .map((c) => statuses.containsKey(c.id)
+              ? c.copyWith(
+                  status: statuses[c.id],
+                  reliabilityScore: AppStorage.getScore(c.id),
+                )
+              : c)
           .toList();
-      
-      // Notifier l'UI après chaque batch pour montrer la progression
-      if (isReliableMode && i % 30 == 0) {
-        _recomputeBase();
-        _applyFilters();
-        notifyListeners();
-      }
     }
-    
-    // Validation finale
+
     if (isReliableMode) {
       _recomputeBase();
       _applyFilters();
@@ -436,11 +494,19 @@ class HomeProvider extends ChangeNotifier {
     final Map<String, ChannelEntity> merged = {};
 
     for (final c in channels) {
-      final key = c.name.toLowerCase().trim();
+      // Identité stable partagée avec le pipeline (tvg-id sinon nom normalisé).
+      final key = stableChannelId(tvgId: c.tvgId, name: c.name);
       final existing = merged[key];
 
+      // Les ids préfixés (xtream_/daddylive_) restent tels quels ; le reste est
+      // aligné sur l'identité stable → mêmes scores/favoris qu'en mode Fiable.
+      String idFor(ChannelEntity primary) =>
+          primary.id.startsWith('xtream_') || primary.id.startsWith('daddylive_')
+              ? primary.id
+              : key;
+
       if (existing == null) {
-        merged[key] = c;
+        merged[key] = c.id == idFor(c) ? c : c.copyWith(id: idFor(c));
         continue;
       }
 
@@ -458,7 +524,7 @@ class HomeProvider extends ChangeNotifier {
         ...(keepNewAsPrimary ? existing.backupUrls : c.backupUrls),
       }.take(6).toList();
 
-      merged[key] = primary.copyWith(backupUrls: backups);
+      merged[key] = primary.copyWith(id: idFor(primary), backupUrls: backups);
     }
 
     return merged.values.toList();
@@ -546,6 +612,7 @@ class HomeProvider extends ChangeNotifier {
 
   void toggleShowAdult() {
     AppStorage.setShowAdult(!showAdult);
+    _rebuildGroups(); // le chip 'Adulte 🔞' apparaît/disparaît avec le toggle
     _applyFilters();
     notifyListeners();
   }
@@ -567,19 +634,6 @@ class HomeProvider extends ChangeNotifier {
     // Base = catalogue curé (Fiable) ou sources brutes filtrées (Explorer),
     // déjà triée/exclue par le ChannelService.
     var channels = List<ChannelEntity>.from(_modeBase);
-
-    // En Explorer uniquement : les chaînes auto-confirmées fraîches sont
-    // retirées (elles vivent dans l'onglet "Fiables"). En mode Fiable on garde
-    // tout le catalogue, sinon il se viderait au fil des visionnages.
-    if (!isReliableMode) {
-      final confirmed = AppStorage.getConfirmedChannels();
-      if (confirmed.isNotEmpty) {
-        channels = channels
-            .where((c) =>
-                !(confirmed.contains(c.id) && AppStorage.isReliableFresh(c.id)))
-            .toList();
-      }
-    }
 
     // Chaînes "mortes" (3+ échecs DURS) masquées sauf si l'utilisateur l'autorise.
     if (!_showHidden) {
@@ -637,9 +691,6 @@ class HomeProvider extends ChangeNotifier {
       await AppStorage.removeFavorite(channelId);
     } else {
       await AppStorage.addFavorite(channelId);
-      // Auto-certifier les favoris comme vérifiés
-      await AppStorage.confirmChannel(channelId);
-      await AppStorage.markConfirmedNow(channelId);
     }
     notifyListeners();
   }

@@ -2,7 +2,12 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:iptv/core/services/disk_cache.dart';
+import 'package:iptv/core/utils/stable_id.dart';
 
+/// Sources M3U brutes du mode « Explorer ». Le mode « Sélection fiable » est
+/// servi par le catalogue v3 (CatalogV3Source) — les flux vérifiés par la CI
+/// n'ont plus à être re-téléchargés ici.
 class M3uDataSource {
   M3uDataSource._();
 
@@ -11,11 +16,7 @@ class M3uDataSource {
   static const String _internationalPlaylist = 'assets/playlists/international.m3u8';
   static const String _blocklistAsset = 'assets/playlists/blocklist.json';
 
-  // Liste pré-vérifiée VIVANTE, régénérée toutes les 6h par la GitHub Action
-  // tools/healthcheck.py (.github/workflows/healthcheck.yml). Sources 100%
-  // légales uniquement. Chargée en 1er = chaînes les + fiables.
-  static const String _verifiedIndex =
-      'https://raw.githubusercontent.com/berlisB/iptv/main/verified.m3u';
+  static const Duration _cacheTtl = Duration(hours: 6);
 
   // iptv-org : SEULEMENT les chaînes françaises (472 chaînes, pas le master 8000+)
   static const String _iptvOrgFrench =
@@ -46,43 +47,15 @@ class M3uDataSource {
     'https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/main/tv.m3u',
   ];
 
-  /// Tier 1 — HLS officiels des diffuseurs (les + fiables : CDN direct, pas de
-  /// scraping, 100% légal/FTA). Flux uniques injectés comme un M3U curé.
-  /// URL vérifiées 06/2026.
-  static const String _officialBroadcasters = '''
-#EXTM3U
-#EXTINF:-1 tvg-id="Arte.fr" group-title="France",Arte
-https://artesimulcast.akamaized.net/hls/live/2031003/artelive_fr/index.m3u8
-#EXTINF:-1 tvg-id="France5.fr" group-title="France",France 5
-https://s13.tntendirect.com/france5/live/playlist.m3u8
-#EXTINF:-1 tvg-id="France24French.fr" group-title="France",France 24 Français
-https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8
-#EXTINF:-1 tvg-id="France24English.fr" group-title="France",France 24 English
-https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8
-#EXTINF:-1 tvg-id="EuronewsFrench.fr" group-title="France",Euronews Français
-https://cdn-euronews.akamaized.net/live/eds/euronews-fr/25026/index.m3u8
-#EXTINF:-1 tvg-id="EuronewsEnglish.fr" group-title="France",Euronews English
-https://cdn-euronews.akamaized.net/live/eds/euronews-en/25002/index.m3u8
-#EXTINF:-1 tvg-id="TV5MondeFBS.fr" group-title="France",TV5 Monde FBS
-https://ott.tv5monde.com/Content/HLS/Live/channel(fbs)/index.m3u8
-#EXTINF:-1 tvg-id="TV5MondeInfo.fr" group-title="France",TV5 Monde Info
-https://ott.tv5monde.com/Content/HLS/Live/channel(info)/index.m3u8
-#EXTINF:-1 tvg-id="BFMTV.fr" group-title="France",BFMTV
-https://bcovlive-a.akamaihd.net/f3c53617100e4fd7a0fbdf9e784a650e/eu-central-1/876450610001/playlist.m3u8
-#EXTINF:-1 tvg-id="DWEnglish.de" group-title="International",DW English
-https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/master.m3u8
-#EXTINF:-1 tvg-id="AlJazeeraEnglish.qa" group-title="International",Al Jazeera English
-https://live-hls-web-aje.getaj.net/AJE/index.m3u8
-#EXTINF:-1 tvg-id="AlJazeera.qa" group-title="International",Al Jazeera Arabic
-https://live-hls-web-aja.getaj.net/AJA-V3/index.m3u8
-#EXTINF:-1 tvg-id="NASATV.us" group-title="International",NASA TV
-https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8
-#EXTINF:-1 tvg-id="ABCNewsLive.us" group-title="International",ABC News Live
-https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u8
-''';
-
-  /// Fetch a single remote playlist
+  /// Fetch une playlist avec cache disque : cache frais (< 6 h) → réseau →
+  /// cache périmé en secours si le réseau échoue.
   static Future<String?> _fetchPlaylist(String url) async {
+    final cacheKey = 'm3u_${fnv1a64Hex(url)}';
+    final cached = await DiskCache.readString(cacheKey, maxAge: _cacheTtl);
+    if (cached != null) {
+      debugPrint('[IPTV] Cache hit: $url');
+      return cached;
+    }
     try {
       debugPrint('[IPTV] Fetching $url');
       final response = await http
@@ -91,18 +64,15 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
 
       if (response.statusCode == 200 && response.body.length > 100) {
         debugPrint('[IPTV] Got ${response.body.length} bytes from $url');
+        await DiskCache.writeString(cacheKey, response.body);
         return response.body;
       }
     } catch (e) {
       debugPrint('[IPTV] Failed: $url ($e)');
     }
-    return null;
-  }
-
-  /// Fetch la liste pré-vérifiée vivante (régénérée toutes les 6h par CI).
-  static Future<String> fetchVerifiedIndex() async {
-    final result = await _fetchPlaylist(_verifiedIndex);
-    return result ?? '';
+    final stale = await DiskCache.readString(cacheKey);
+    if (stale != null) debugPrint('[IPTV] Réseau KO → cache périmé: $url');
+    return stale;
   }
 
   /// Fetch les chaînes françaises iptv-org (472 chaînes, pas le master 8000+)
@@ -144,7 +114,6 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
 
     try {
       final results = await Future.wait([
-        fetchVerifiedIndex(),       // pré-vérifiées vivantes (en 1er = + fiables)
         fetchIptvOrgFrench(),       // chaînes françaises iptv-org
         fetchReliableSources(),     // sources fiables (françaises + CDN officiels)
         fetchChineseIptv(),         // IPTV chinoises (CCTV + régions)
@@ -155,18 +124,19 @@ https://abcnews-streams.akamaized.net/hls/live/2023560/abcnewshudson1/master.m3u
           parts.add(result);
         }
       }
-
-      // Tier 1 broadcasters officiels : toujours inclus (curé, hors réseau).
-      parts.add(_officialBroadcasters);
     } catch (e) {
       debugPrint('[IPTV] Remote fetch error: $e');
     }
 
-    // Always include local as fallback
-    try {
-      parts.add(await loadLocalPlaylists());
-    } catch (e) {
-      debugPrint('[IPTV] Local load error: $e');
+    // Assets embarqués : uniquement en secours quand tout le réseau a échoué
+    // (sinon ils ne créent que des doublons périmés).
+    if (parts.isEmpty) {
+      try {
+        parts.add(await loadLocalPlaylists());
+        debugPrint('[IPTV] Réseau KO → playlists embarquées');
+      } catch (e) {
+        debugPrint('[IPTV] Local load error: $e');
+      }
     }
 
     debugPrint('[IPTV] Total playlist data: '

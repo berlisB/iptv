@@ -195,8 +195,10 @@ NAME_KEYWORDS = [
       "camtv", "naked"), "Adulte 🔞"),
 ]
 
-_QUALITY_RE = re.compile(
-    r"\b(4k|uhd|fhd|hd|sd|1080p?|720p?|480p?)\b", re.IGNORECASE)
+# Tokens de qualité retirés du nom pour l'identité (pas de regex \b : son
+# comportement diverge entre Python et Dart sur les caractères accentués).
+QUALITY_TOKENS = {"4k", "uhd", "fhd", "hd", "sd",
+                  "1080", "1080p", "720", "720p", "480", "480p"}
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 
 _EXTINF_ATTRS = {
@@ -210,9 +212,8 @@ _EXTINF_ATTRS = {
 def normalize_name(name):
     """Nom → clé d'identité : lowercase, sans qualité/ponctuation.
     DOIT rester identique à normalizeName de lib/core/utils/stable_id.dart."""
-    n = _QUALITY_RE.sub(" ", name.lower())
-    n = _NON_ALNUM_RE.sub(" ", n)
-    return " ".join(n.split())
+    tokens = _NON_ALNUM_RE.sub(" ", name.lower()).split()
+    return " ".join(t for t in tokens if t not in QUALITY_TOKENS)
 
 
 def fnv1a64_hex(text):
