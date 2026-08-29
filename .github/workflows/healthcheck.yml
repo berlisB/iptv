@@ -41,14 +41,14 @@ jobs:
           TIMEOUT: "8"
         run: python tools/healthcheck.py
 
-      - name: Commit verified.m3u
+      - name: Commit verified.m3u + catalog.json
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet verified.m3u; then
-            echo "Aucun changement dans verified.m3u"
+          git add verified.m3u catalog.json
+          if git diff --cached --quiet; then
+            echo "Aucun changement"
           else
-            git add verified.m3u
-            git commit -m "chore: refresh verified.m3u [skip ci]"
+            git commit -m "chore: refresh verified.m3u + catalog.json [skip ci]"
             git push
           fi
