@@ -45,7 +45,7 @@ class CurationConfig {
 
   // --- Score de fiabilité (0..100) -------------------------------------------
 
-  static const int initialScore = 50;
+  static const int initialScore = 60;
   static const int maxScore = 100;
   static const int minScore = 0;
 
@@ -58,8 +58,10 @@ class CurationConfig {
   /// Timeout → pénalité moyenne.
   static const int penaltyTimeout = 15;
 
-  /// Échec "dur" (HTTP 403/404/410, codec) → forte pénalité.
-  static const int penaltyHardFail = 35;
+  /// Échec "dur" (HTTP 404/410 avéré) → forte pénalité, mais il en faut
+  /// deux (60 - 2×25 < 35) pour passer sous le seuil "Sélection fiable" :
+  /// un seul faux positif ne masque plus une chaîne.
+  static const int penaltyHardFail = 25;
 
   /// Sous ce score, une chaîne est masquée en mode "Sélection fiable".
   /// (Elle reste visible en "Explorer" avec un badge.)

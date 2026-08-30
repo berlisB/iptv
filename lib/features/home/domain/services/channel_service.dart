@@ -38,9 +38,10 @@ class ChannelService {
   /// Valide un flux et met à jour son score selon le résultat.
   /// Ne supprime jamais une chaîne : seul le score bouge (decay/récompense).
   Future<ChannelStatus> validateAndScore(ChannelEntity channel) async {
-    final headers = _headersFor(channel);
-    // offline seulement si au moins un échec dur (403/404) ; des échecs
-    // uniquement mous (timeout/erreur réseau) laissent le statut unknown.
+    final headers = channel.httpHeaders.toHttpMap();
+    // offline seulement sur échec dur AVÉRÉ (404/410). Un 403 sur un GET
+    // Range est massivement un faux positif (CDN exigeant headers/token que
+    // mpv envoie mais pas forcément le probe) → pénalité douce seulement.
     var status = ChannelStatus.unknown;
 
     for (final url in channel.allUrls) {
@@ -49,14 +50,14 @@ class ChannelService {
         case ProbeOutcome.ok:
           await AppStorage.recordSuccess(channel.id);
           return ChannelStatus.online;
-        case ProbeOutcome.forbidden:
         case ProbeOutcome.notFound:
           await AppStorage.recordHardFail(channel.id);
           status = ChannelStatus.offline;
-        case ProbeOutcome.timeout:
-          await AppStorage.recordTimeout(channel.id);
+        case ProbeOutcome.forbidden:
         case ProbeOutcome.error:
           await AppStorage.recordSoftFail(channel.id);
+        case ProbeOutcome.timeout:
+          await AppStorage.recordTimeout(channel.id);
       }
     }
     return status;
@@ -80,11 +81,4 @@ class ChannelService {
     return results;
   }
 
-  Map<String, String>? _headersFor(ChannelEntity c) {
-    if (!c.httpHeaders.hasHeaders) return null;
-    return {
-      if (c.httpHeaders.referrer != null) 'Referer': c.httpHeaders.referrer!,
-      if (c.httpHeaders.httpOrigin != null) 'Origin': c.httpHeaders.httpOrigin!,
-    };
-  }
 }

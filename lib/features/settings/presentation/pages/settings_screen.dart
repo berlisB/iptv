@@ -149,6 +149,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : null,
             ),
             _buildActionTile(
+              icon: Icons.healing,
+              title: 'Réhabiliter les chaînes bannies',
+              subtitle: 'Efface les échecs mémorisés (strikes et scores)',
+              color: AppColor.accentGreen,
+              onTap: () async {
+                await AppStorage.clearStrikesAndScores();
+                await hp.loadChannels();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        const Text('Chaînes réhabilitées, scores réinitialisés'),
+                    backgroundColor: AppColor.surfaceColor,
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+            _buildActionTile(
               icon: Icons.delete_sweep,
               title: 'Vider la blocklist locale',
               subtitle: '${AppStorage.getLocalBlocklist().length} URLs',

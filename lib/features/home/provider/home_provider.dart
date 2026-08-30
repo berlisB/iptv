@@ -459,10 +459,15 @@ class HomeProvider extends ChangeNotifier {
         if (c.isOfficial || favorites.contains(c.id)) c,
       ..._catalogChannels.take(100),
     ];
+    // Cooldown : pas de re-probe d'une chaîne vérifiée il y a moins de 6 h —
+    // le probe ne doit pas marteler les CDN (ni les scores) à chaque lancement.
+    final cutoff = DateTime.now().subtract(const Duration(hours: 6));
     final seen = <String>{};
     final toValidate = [
       for (final c in sample)
-        if (seen.add(c.id)) c,
+        if (seen.add(c.id) &&
+            (AppStorage.getCheckedAt(c.id)?.isBefore(cutoff) ?? true))
+          c,
     ];
 
     const batchSize = 10;

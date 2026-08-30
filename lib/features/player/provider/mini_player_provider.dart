@@ -8,6 +8,16 @@ import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/player/provider/mpv_config.dart';
 
 class MiniPlayerProvider extends ChangeNotifier {
+  MiniPlayerProvider() {
+    // L'Android natif notifie les entrées/sorties de Picture-in-Picture.
+    _pipChannel.setMethodCallHandler((call) async {
+      if (call.method == 'pipChanged') {
+        _isInPip = call.arguments == true;
+        _safeNotify();
+      }
+    });
+  }
+
   Player? _player;
   VideoController? _videoController;
   ChannelEntity? _currentChannel;
@@ -24,6 +34,7 @@ class MiniPlayerProvider extends ChangeNotifier {
   StreamSubscription? _bufferSub;
   StreamSubscription? _widthSub;
   StreamSubscription? _errorSub;
+  StreamSubscription? _positionSub;
   Timer? _connectionTimer;
   Timer? _deadTimer;
   Timer? _confirmTimer;
@@ -36,9 +47,29 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool _hasConnected = false;
   bool _confirmedThisSession = false;
 
-  /// Détection de stall : si aucun frame reçu pendant cette durée alors qu'on
-  /// jouait, on considère que le flux est mort et on tente une reconnexion.
-  static const _stallTimeout = 15;
+  // Progression réelle de la lecture (seule preuve fiable de vie du flux :
+  // stream.width n'est émis qu'au changement de résolution, jamais par frame).
+  Duration _lastPosition = Duration.zero;
+  DateTime _lastProgressAt = DateTime.now();
+  int _consecutiveStalls = 0;
+
+  // Debounce des erreurs mpv en cours de lecture.
+  DateTime _errorWindowStart = DateTime.fromMillisecondsSinceEpoch(0);
+  int _errorsInWindow = 0;
+  DateTime? _lastErrorReopenAt;
+
+  // Une seule pénalité de score par chaîne et par session.
+  bool _penalizedThisSession = false;
+
+  // Picture-in-Picture / cycle de vie.
+  bool _isInPip = false;
+  bool _pipEligible = false;
+  bool _resumeOnForeground = false;
+  DateTime? _backgroundedAt;
+
+  /// Stall : position figée pendant cette durée alors que la lecture est
+  /// censée tourner → reconnexion (puis failover si ça se répète).
+  static const _stallTimeout = 20;
 
   static const _deadTimeoutByLevel = [12, 18, 30];
   static const _pipChannel = MethodChannel('com.example.iptv/pip');
@@ -71,8 +102,6 @@ class MiniPlayerProvider extends ChangeNotifier {
     return '';
   }
 
-  int get retryCount => 0;
-  bool get isRetrying => false;
   bool get hasExhaustedRetries => _exhausted;
 
   void _safeNotify() {
@@ -95,26 +124,17 @@ class MiniPlayerProvider extends ChangeNotifier {
     _playingSub = _player!.stream.playing.listen((playing) {
       if (_disposed) return;
       _isPlaying = playing;
-
       if (playing) {
-        // Lecture confirmée → on relance le stall detector.
-        _restartStallDetector();
-      } else {
-        _stallTimer?.cancel();
+        // Reprise (ou démarrage) : on repart d'une horloge de progrès neuve
+        // pour ne pas compter le temps de pause comme un stall.
+        _lastProgressAt = DateTime.now();
       }
-
       _safeNotify();
     });
 
     _bufferSub = _player!.stream.buffering.listen((buffering) {
       if (_disposed) return;
       _isBuffering = buffering;
-
-      if (buffering && !_hasConnected) {
-        _hasConnected = true;
-        _deadTimer?.cancel();
-        _deadTimer = null;
-      }
 
       if (_hasEverPlayed && !_confirmedThisSession) {
         if (!buffering) {
@@ -129,6 +149,19 @@ class MiniPlayerProvider extends ChangeNotifier {
       _safeNotify();
     });
 
+    // La position est la seule preuve continue de vie du flux : elle alimente
+    // le moniteur de stall ET la détection de connexion réelle (des octets
+    // sont décodés — contrairement à buffering=true qui précède tout octet).
+    _positionSub = _player!.stream.position.listen((pos) {
+      if (_disposed) return;
+      if (pos != _lastPosition) {
+        _lastPosition = pos;
+        _lastProgressAt = DateTime.now();
+        _consecutiveStalls = 0;
+        if (!_hasConnected && pos > Duration.zero) _hasConnected = true;
+      }
+    });
+
     _widthSub = _player!.stream.width.listen((width) {
       if (_disposed) return;
       if (width != null && width > 0 && !_hasEverPlayed) {
@@ -141,27 +174,39 @@ class MiniPlayerProvider extends ChangeNotifier {
           AppStorage.resetStrikes(_currentChannel!.id);
         }
         _cancelTimers();
-        _restartStallDetector();
+        _startStallMonitor();
         _safeNotify();
-      } else if (width != null && width > 0) {
-        // Flux déjà en cours → reset du stall timer (on reçoit des frames).
-        _restartStallDetector();
       }
     });
 
     _errorSub = _player!.stream.error.listen((err) {
       if (_disposed) return;
-      debugPrint('[IPTV] Erreur sur source $currentSourceNumber: $err');
+      debugPrint('[IPTV] Erreur mpv sur source $currentSourceNumber: $err');
 
-      // Si on jouait déjà, on tente une reconnexion sur la même source.
+      // Les erreurs de décodage (frame corrompue…) sont bénignes : mpv
+      // récupère seul à la GOP suivante. N'agir que sur les erreurs réseau.
+      if (!_isActionableError(err)) return;
+
+      // Flux qui jouait : reconnexion débouncée, SANS toucher à
+      // _hasEverPlayed (le remettre à false ouvrait la porte aux strikes et
+      // au failover intempestif pendant le re-buffering).
       if (_hasEverPlayed) {
-        debugPrint('[IPTV] Stall détecté via erreur → reconnexion');
-        _hasEverPlayed = false;
-        _hasConnected = false;
-        _connectionSeconds = 0;
+        final now = DateTime.now();
+        if (now.difference(_errorWindowStart) > const Duration(seconds: 10)) {
+          _errorWindowStart = now;
+          _errorsInWindow = 0;
+        }
+        _errorsInWindow++;
+        if (_errorsInWindow < 2) return;
+        if (_lastErrorReopenAt != null &&
+            now.difference(_lastErrorReopenAt!) <
+                const Duration(seconds: 10)) {
+          return;
+        }
+        _lastErrorReopenAt = now;
+        debugPrint('[IPTV] Erreurs réseau répétées → reconnexion');
         _isBuffering = true;
         _safeNotify();
-        _startConnectionTracking();
         _openCurrentSource();
         return;
       }
@@ -170,19 +215,39 @@ class MiniPlayerProvider extends ChangeNotifier {
     });
   }
 
-  /// (Re)démarre le timer de détection de stall.
-  void _restartStallDetector() {
+  /// Erreur mpv qui mérite une action (réseau/flux). Le reste (décodage
+  /// vidéo/audio, données corrompues ponctuelles) est loggé et ignoré.
+  static bool _isActionableError(String err) {
+    final e = err.toLowerCase();
+    if (e.contains('decod') ||
+        e.contains('invalid data') ||
+        e.contains('corrupt') ||
+        e.contains('packet')) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Moniteur de stall : vérifie toutes les 5 s que la position avance.
+  /// Position figée > [_stallTimeout] s pendant une lecture active →
+  /// reconnexion de la source courante, puis failover si ça se répète.
+  void _startStallMonitor() {
     _stallTimer?.cancel();
-    _stallTimer = Timer(const Duration(seconds: _stallTimeout), () {
-      if (_disposed || !_hasEverPlayed) return;
-      debugPrint('[IPTV] Stall: aucun frame reçu pendant ${_stallTimeout}s '
-          '→ reconnexion sur même source');
-      _hasEverPlayed = false;
-      _hasConnected = false;
-      _connectionSeconds = 0;
+    _lastProgressAt = DateTime.now();
+    _stallTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (_disposed || !_hasEverPlayed || !_isPlaying) return;
+      final stalledFor = DateTime.now().difference(_lastProgressAt);
+      if (stalledFor.inSeconds < _stallTimeout) return;
+
+      _lastProgressAt = DateTime.now(); // pas de re-déclenchement immédiat
+      _consecutiveStalls++;
+      debugPrint('[IPTV] Stall: position figée ${stalledFor.inSeconds}s '
+          '(occurrence $_consecutiveStalls)');
+
+      if (_consecutiveStalls >= 2 && _tryNextSource()) return;
+
       _isBuffering = true;
       _safeNotify();
-      _startConnectionTracking();
       _openCurrentSource();
     });
   }
@@ -195,16 +260,6 @@ class MiniPlayerProvider extends ChangeNotifier {
     AppStorage.recordSuccess(_currentChannel!.id);
     debugPrint('[IPTV] Lecture stable, score récompensé: '
         '${_currentChannel!.name}');
-  }
-
-  Map<String, String>? _buildHeaders(ChannelEntity channel) {
-    if (!channel.httpHeaders.hasHeaders) return null;
-    return {
-      if (channel.httpHeaders.referrer != null)
-        'Referer': channel.httpHeaders.referrer!,
-      if (channel.httpHeaders.httpOrigin != null)
-        'Origin': channel.httpHeaders.httpOrigin!,
-    };
   }
 
   Future<void> playChannel(ChannelEntity channel) async {
@@ -220,8 +275,19 @@ class MiniPlayerProvider extends ChangeNotifier {
     _hasEverPlayed = false;
     _hasConnected = false;
     _confirmedThisSession = false;
+    _penalizedThisSession = false;
+    _consecutiveStalls = 0;
+    _errorsInWindow = 0;
+    _lastErrorReopenAt = null;
+    _lastPosition = Duration.zero;
     _connectionSeconds = 0;
     _isBuffering = true;
+
+    // Reprise de session : on retrouve cette chaîne au prochain démarrage.
+    if (channel.isLivestream) {
+      AppStorage.setLastPlayedChannelId(channel.id);
+    }
+    _setPipEligible(true);
 
     _ensurePlayer();
     _cancelTimers();
@@ -236,7 +302,7 @@ class MiniPlayerProvider extends ChangeNotifier {
     if (_player == null || _currentChannel == null) return;
     final url = _sources[_sourceIndex];
     _player!
-        .open(Media(url, httpHeaders: _buildHeaders(_currentChannel!)))
+        .open(Media(url, httpHeaders: _currentChannel!.httpHeaders.toHttpMap()))
         .catchError((e) {
       if (!_disposed) {
         debugPrint('[IPTV] open() échoué: $e');
@@ -262,9 +328,18 @@ class MiniPlayerProvider extends ChangeNotifier {
 
   void _onAllSourcesFailed({required bool hard}) {
     _exhausted = true;
-    if (hard && _currentChannel != null) {
-      AppStorage.addStrike(_currentChannel!.id);
-      debugPrint('[IPTV] Échec dur épuisé → strike pour ${_currentChannel!.name}');
+    // Pénalité DOUCE uniquement : une erreur mpv peut être un simple hiccup
+    // réseau du téléphone. Les strikes (bannissement) sont réservés aux
+    // verdicts fiables du probe HTTP (404/410). Max 1 pénalité par session.
+    if (_currentChannel != null && !_penalizedThisSession) {
+      _penalizedThisSession = true;
+      if (hard) {
+        AppStorage.recordSoftFail(_currentChannel!.id);
+      } else {
+        AppStorage.recordTimeout(_currentChannel!.id);
+      }
+      debugPrint('[IPTV] Sources épuisées (${hard ? 'erreur' : 'timeout'}) '
+          '→ pénalité douce pour ${_currentChannel!.name}');
     }
     _safeNotify();
   }
@@ -360,6 +435,8 @@ class MiniPlayerProvider extends ChangeNotifier {
 
   Future<void> stopAndClose() async {
     _cancelTimers();
+    _setPipEligible(false);
+    await AppStorage.clearLastPlayedChannelId();
     _isMiniMode = false;
     _currentChannel = null;
     _sources = [];
@@ -382,6 +459,53 @@ class MiniPlayerProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// True quand l'activité Android est en Picture-in-Picture : l'UI ne doit
+  /// alors rendre que la vidéo (aucun contrôle dans la vignette).
+  bool get isInPip => _isInPip;
+
+  /// Signale au natif si un passage automatique en PiP a du sens (une lecture
+  /// est en cours). Pilote `setAutoEnterEnabled` et `onUserLeaveHint`.
+  void _setPipEligible(bool eligible) {
+    if (_pipEligible == eligible) return;
+    _pipEligible = eligible;
+    _pipChannel
+        .invokeMethod('setPipEligible', eligible)
+        .catchError((_) => null);
+  }
+
+  // --- Cycle de vie de l'app ------------------------------------------------
+
+  /// App en arrière-plan HORS PiP : on met en pause et on gèle le moniteur de
+  /// stall (sinon il rouvrirait le flux en boucle en tâche de fond).
+  void onAppBackground() {
+    if (_disposed || _isInPip || !hasActivePlayer) return;
+    _resumeOnForeground = _isPlaying;
+    _backgroundedAt = DateTime.now();
+    _stallTimer?.cancel();
+    _player?.pause();
+  }
+
+  /// Retour au premier plan : reprise. Sur du live resté en pause > 30 s, le
+  /// buffer est périmé → on rouvre au live edge plutôt que de jouer du différé.
+  void onAppForeground() {
+    if (_disposed || !hasActivePlayer || !_resumeOnForeground) return;
+    _resumeOnForeground = false;
+    final pausedFor = _backgroundedAt == null
+        ? Duration.zero
+        : DateTime.now().difference(_backgroundedAt!);
+    _lastProgressAt = DateTime.now();
+    if (_hasEverPlayed) _startStallMonitor();
+    if ((_currentChannel?.isLivestream ?? false) &&
+        pausedFor > const Duration(seconds: 30)) {
+      debugPrint('[IPTV] Retour après ${pausedFor.inSeconds}s → live edge');
+      _isBuffering = true;
+      _safeNotify();
+      _openCurrentSource();
+    } else {
+      _player?.play();
+    }
+  }
+
   @override
   void dispose() {
     _disposed = true;
@@ -390,10 +514,12 @@ class MiniPlayerProvider extends ChangeNotifier {
     _bufferSub?.cancel();
     _widthSub?.cancel();
     _errorSub?.cancel();
+    _positionSub?.cancel();
     _playingSub = null;
     _bufferSub = null;
     _widthSub = null;
     _errorSub = null;
+    _positionSub = null;
     try {
       _player?.dispose();
     } catch (_) {}

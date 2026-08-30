@@ -126,30 +126,56 @@ class AppStorage {
   static int getBufferLevel() => _prefs.getInt(_bufferLevelKey) ?? 1;
   static Future<void> setBufferLevel(int v) => _prefs.setInt(_bufferLevelKey, v);
 
-  // --- Strikes : échecs DURS répétés (403/404/codec/DNS), jamais la lenteur ---
-  static const String _strikesKey = 'channel_strikes';
-  static const int strikeThreshold = 3; // banni seulement au-delà
+  // --- Reprise de session live ---
+  // Chaîne en cours de lecture, pour reprendre la diffusion au prochain
+  // démarrage (même si Android a tué le process).
+  static const String _lastPlayedKey = 'last_played_channel';
 
-  static Map<String, int> _getStrikes() {
+  static String? getLastPlayedChannelId() => _prefs.getString(_lastPlayedKey);
+
+  static Future<void> setLastPlayedChannelId(String channelId) =>
+      _prefs.setString(_lastPlayedKey, channelId);
+
+  static Future<void> clearLastPlayedChannelId() =>
+      _prefs.remove(_lastPlayedKey);
+
+  // --- Strikes : échecs DURS répétés (404/410 avérés), jamais la lenteur ---
+  // v2 : chaque strike est horodaté et EXPIRE après 48 h — un incident
+  // passager ne peut plus bannir une chaîne à vie. (L'ancienne clé
+  // 'channel_strikes' sans horodatage est abandonnée = amnistie générale.)
+  static const String _strikesKey = 'channel_strikes_v2';
+  static const int strikeThreshold = 3; // banni seulement au-delà
+  static const int _strikeTtlMs = 48 * 60 * 60 * 1000;
+
+  /// map id → [count, lastAtMs]
+  static Map<String, dynamic> _getStrikesMap() {
     final raw = _prefs.getString(_strikesKey);
     if (raw == null) return {};
-    return Map<String, int>.from(jsonDecode(raw));
+    return Map<String, dynamic>.from(jsonDecode(raw));
   }
 
-  static int getStrikes(String channelId) => _getStrikes()[channelId] ?? 0;
+  static int getStrikes(String channelId) {
+    final entry = _getStrikesMap()[channelId];
+    if (entry is! List || entry.length < 2) return 0;
+    final lastAt = (entry[1] as num).toInt();
+    if (DateTime.now().millisecondsSinceEpoch - lastAt > _strikeTtlMs) {
+      return 0; // périmé — purgé au prochain addStrike/resetStrikes
+    }
+    return (entry[0] as num).toInt();
+  }
 
   // Ajoute un strike (échec dur) et renvoie le nouveau total.
   static Future<int> addStrike(String channelId) async {
-    final map = _getStrikes();
-    final next = (map[channelId] ?? 0) + 1;
-    map[channelId] = next;
+    final map = _getStrikesMap();
+    final next = getStrikes(channelId) + 1; // repart de 0 si périmé
+    map[channelId] = [next, DateTime.now().millisecondsSinceEpoch];
     await _prefs.setString(_strikesKey, jsonEncode(map));
     return next;
   }
 
   // Remet les strikes à zéro dès qu'une chaîne refonctionne (decay au succès).
   static Future<void> resetStrikes(String channelId) async {
-    final map = _getStrikes();
+    final map = _getStrikesMap();
     if (map.remove(channelId) != null) {
       await _prefs.setString(_strikesKey, jsonEncode(map));
     }
@@ -158,6 +184,13 @@ class AppStorage {
   // Une chaîne n'est considérée "morte" qu'après strikeThreshold échecs durs.
   static bool isDead(String channelId) =>
       getStrikes(channelId) >= strikeThreshold;
+
+  /// Réhabilitation totale (bouton Réglages) : purge strikes ET scores.
+  static Future<void> clearStrikesAndScores() async {
+    await _prefs.remove(_strikesKey);
+    await _prefs.remove(_scoreKey);
+    await _prefs.remove(_checkedAtKey);
+  }
 
   // --- Score de fiabilité (0..100, decay graduel) ---------------------------
   // Complète les "strikes" (binaire mort/vivant) par un score continu utilisé

@@ -112,6 +112,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
           builder: (context, mp, _) {
             final showError = mp.hasExhaustedRetries;
 
+            // En Picture-in-Picture : uniquement la vidéo — aucun contrôle,
+            // gradient ou texte ne doit encombrer la vignette.
+            if (mp.isInPip) {
+              return mp.videoController != null
+                  ? Video(
+                      controller: mp.videoController!,
+                      controls: NoVideoControls,
+                      fill: Colors.black,
+                    )
+                  : const ColoredBox(color: Colors.black);
+            }
+
             return GestureDetector(
               onTap: _onTapVideo,
               child: Stack(

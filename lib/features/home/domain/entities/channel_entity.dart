@@ -15,6 +15,18 @@ class ChannelHttpHeaders {
 
   bool get hasHeaders =>
       referrer != null || userAgent != null || httpOrigin != null;
+
+  /// Headers HTTP à envoyer pour ce flux — LE point unique de construction,
+  /// partagé par le player (Media) et le probe (StreamValidator) pour que
+  /// les deux voient le serveur de la même façon.
+  Map<String, String>? toHttpMap() {
+    if (!hasHeaders) return null;
+    return {
+      'Referer': ?referrer,
+      'Origin': ?httpOrigin,
+      'User-Agent': ?userAgent,
+    };
+  }
 }
 
 enum MediaType { livestream, movie }

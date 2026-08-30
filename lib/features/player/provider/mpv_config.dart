@@ -4,11 +4,12 @@ import 'package:iptv/core/storage/app_storage.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 
 /// Presets de buffer : [bufferSize MB, cacheSecs, readaheadSecs, pauseWait secs].
-/// pauseWait = durée minimale de buffer avant de lancer la lecture.
+/// pauseWait = durée minimale de buffer avant de (re)lancer la lecture — courte,
+/// sinon chaque micro-coupure coûte plusieurs secondes de gel visible.
 const bufferPresets = [
-  [32, 20, 20, 3],  // 0 = Faible (latence réduite, buffer léger)
-  [64, 60, 40, 8],  // 1 = Normal (équilibré, 8s de pré-buffer)
-  [150, 180, 90, 15], // 2 = Élevé (pré-charge fortement, stable)
+  [32, 20, 20, 2],  // 0 = Faible (latence réduite, buffer léger)
+  [64, 60, 40, 3],  // 1 = Normal (équilibré)
+  [150, 180, 90, 5], // 2 = Élevé (pré-charge fortement, stable)
 ];
 
 /// Configure mpv pour un flux VOD (HLS direct).
@@ -79,7 +80,9 @@ Future<void> configureMpvForChannel(Player? player, ChannelEntity channel) async
     await mpv.setProperty('cache', 'yes');
     await mpv.setProperty('cache-secs', '${preset[1]}');
     await mpv.setProperty('demuxer-max-bytes', '${preset[0]}MiB');
-    await mpv.setProperty('demuxer-max-back-bytes', '${preset[0] ~/ 2}MiB');
+    // Back-buffer minimal : pas de seek arrière sur du live, la mémoire sert
+    // au readahead.
+    await mpv.setProperty('demuxer-max-back-bytes', '8MiB');
     await mpv.setProperty('demuxer-readahead-secs', '${preset[2]}');
 
     // --- Cache-pause : remplir le buffer puis jouer sans coupure ---
@@ -104,11 +107,12 @@ Future<void> configureMpvForChannel(Player? player, ChannelEntity channel) async
     // --- Spécifique livestream ---
     if (channel.isLivestream) {
       await mpv.setProperty('prefetch-playlist', 'yes');
-      await mpv.setProperty('loop-playlist', 'inf');
       await mpv.setProperty('demuxer-lavf-o', 'live_start_index=-3');
-      // untimed = ne pas synchroniser à l'horloge réelle → zéro saccade
-      // même quand le débit fluctue.
-      await mpv.setProperty('untimed', 'yes');
+      // Synchronisation sur l'horloge audio : rendu régulier. Surtout PAS
+      // `untimed` (rend les frames sans horloge → vide le cache plus vite
+      // qu'il ne se remplit = famine de buffer), ni `loop-playlist` (masque
+      // les EOF en relançant en boucle sans notifier le failover Dart).
+      await mpv.setProperty('video-sync', 'audio');
     } else {
       await mpv.setProperty('save-position-on-quit', 'yes');
     }

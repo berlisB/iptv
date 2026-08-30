@@ -12,6 +12,8 @@ import 'package:iptv/features/home/presentation/widgets/channel_grid.dart';
 import 'package:iptv/features/home/provider/home_provider.dart';
 import 'package:iptv/features/home/domain/entities/channel_entity.dart';
 import 'package:iptv/features/epg/provider/epg_provider.dart';
+import 'package:iptv/features/player/provider/mini_player_provider.dart';
+import 'package:iptv/core/storage/app_storage.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +36,25 @@ class _HomeScreenState extends State<HomeScreen> {
             .where((id) => id.isNotEmpty)
             .toSet();
         context.read<EpgProvider>().load(ids, packs: hp.epgPacks);
+
+        // Reprise de session : la chaîne qui jouait au dernier arrêt de
+        // l'app revient en mini-player (fermable d'un tap).
+        final lastId = AppStorage.getLastPlayedChannelId();
+        final mp = context.read<MiniPlayerProvider>();
+        if (lastId != null && !mp.hasActivePlayer) {
+          ChannelEntity? channel;
+          for (final c in hp.allChannels) {
+            if (c.id == lastId) {
+              channel = c;
+              break;
+            }
+          }
+          if (channel != null) {
+            debugPrint('[IPTV] Reprise de session: ${channel.name}');
+            mp.playChannel(channel);
+            mp.minimizeToMini();
+          }
+        }
       });
     });
   }
