@@ -433,6 +433,29 @@ class MiniPlayerProvider extends ChangeNotifier {
     _safeNotify();
   }
 
+  /// Libère le décodeur et le buffer du live avant qu'un AUTRE lecteur
+  /// (VOD, Telegram) n'ouvre sa propre instance mpv.
+  ///
+  /// Sans ça, deux instances décodent en parallèle : deux sessions de décodage
+  /// matériel — que beaucoup de SoC Android refusent d'accorder — et deux
+  /// buffers cumulés, le live pouvant à lui seul réserver 150 Mo au preset
+  /// « Élevé ». C'est la cause la plus probable des crashs sur le chemin
+  /// « je regarde une chaîne puis j'ouvre un film ».
+  ///
+  /// À la différence de [stopAndClose], la chaîne courante et ses sources sont
+  /// CONSERVÉES : au retour, le mini-player peut reprendre où il en était.
+  Future<void> releaseDecoder() async {
+    if (_player == null) return;
+    _cancelTimers();
+    _setPipEligible(false);
+    _isPlaying = false;
+    _isBuffering = false;
+    try {
+      await _player?.stop();
+    } catch (_) {}
+    _safeNotify();
+  }
+
   Future<void> stopAndClose() async {
     _cancelTimers();
     _setPipEligible(false);

@@ -7,7 +7,10 @@ import 'package:iptv/features/vod/domain/media_entity.dart';
 import 'package:iptv/features/vod/domain/anime_entity.dart';
 
 enum VodCategory {
-  trending, popular, movies, tv, anime, action, comedy, drama, horror
+  trending, popular, movies, tv, anime, action, comedy, drama, horror,
+  /// Contenu du canal Telegram de l'utilisateur. Alimenté par TelegramProvider
+  /// et non par TMDB : cette catégorie n'a donc pas de résultats propres ici.
+  telegram,
 }
 
 class VodProvider extends ChangeNotifier {
@@ -108,7 +111,12 @@ class VodProvider extends ChangeNotifier {
   /// Charge la page suivante de contenu populaire / par genre.
   Future<void> loadMore() async {
     if (_isLoadingMore || !hasMore) return;
-    if (_selectedCategory == VodCategory.anime) return;
+    // Ces catégories ne paginent pas depuis TMDB : animés et canal Telegram
+    // ont leur propre source et chargent tout d'un coup.
+    if (_selectedCategory == VodCategory.anime ||
+        _selectedCategory == VodCategory.telegram) {
+      return;
+    }
 
     _isLoadingMore = true;
     notifyListeners();
@@ -155,7 +163,8 @@ class VodProvider extends ChangeNotifier {
     _genrePage = 1;
     _hasMoreGenre = true;
 
-    if (category == VodCategory.anime) {
+    if (category == VodCategory.anime ||
+        category == VodCategory.telegram) {
       _filteredResults = [];
     } else {
       _applyCategory();
@@ -348,6 +357,9 @@ class VodProvider extends ChangeNotifier {
         _filteredResults = [..._trendingTv, ..._popularTv];
         break;
       case VodCategory.anime:
+      // Ces deux catégories ont leur propre source et leur propre écran ;
+      // le pipeline TMDB n'a rien à y fournir.
+      case VodCategory.telegram:
         _filteredResults = [];
         break;
       case VodCategory.action:

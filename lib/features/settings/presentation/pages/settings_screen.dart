@@ -187,6 +187,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: AppColor.accentBlue,
               onTap: () => _showStatsSheet(hp),
             ),
+            _buildActionTile(
+              icon: Icons.bug_report_outlined,
+              title: 'Journal des erreurs',
+              subtitle: AppStorage.getCrashLog().isEmpty
+                  ? 'Aucune erreur enregistrée'
+                  : '${AppStorage.getCrashLog().length} erreur(s) — '
+                      'à joindre à un rapport de bug',
+              color: AppColor.accentOrange,
+              onTap: AppStorage.getCrashLog().isEmpty
+                  ? null
+                  : () => _showCrashLogSheet(),
+            ),
 
             const SizedBox(height: 24),
 
@@ -449,6 +461,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onChanged: onChanged,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
+    );
+  }
+
+  /// Affiche les erreurs capturées par les gestionnaires globaux de main.dart.
+  ///
+  /// Le texte est sélectionnable pour pouvoir être copié tel quel dans un
+  /// rapport de bug : c'est tout l'intérêt d'avoir persisté ces traces.
+  void _showCrashLogSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColor.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        final entries = AppStorage.getCrashLog();
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) => Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text('Journal des erreurs',
+                          style: AppTypography.heading3
+                              .copyWith(color: AppColor.textPrimary)),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await AppStorage.clearCrashLog();
+                        if (!sheetContext.mounted) return;
+                        Navigator.pop(sheetContext);
+                        setState(() {});
+                      },
+                      child: Text('Effacer',
+                          style: AppTypography.caption
+                              .copyWith(color: AppColor.accentRed)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, _) =>
+                      const Divider(color: AppColor.surfaceColor, height: 20),
+                  itemBuilder: (_, i) => SelectableText(
+                    entries[i],
+                    style: AppTypography.caption.copyWith(
+                      color: AppColor.textSecondary,
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

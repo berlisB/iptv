@@ -9,6 +9,35 @@ class AppStorage {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  // --- Journal de crash ---
+  // Une exception non capturée disparaissait sans laisser de trace : impossible
+  // de diagnostiquer un crash rapporté par un utilisateur. On persiste les
+  // dernières erreurs pour qu'elles survivent au redémarrage et soient
+  // consultables dans Réglages.
+  static const String _crashLogKey = 'crash_log';
+  static const int _crashLogMax = 20;
+
+  static List<String> getCrashLog() =>
+      _prefs.getStringList(_crashLogKey) ?? const [];
+
+  /// Ajoute une entrée horodatée, en gardant les [_crashLogMax] plus récentes.
+  /// Volontairement synchrone côté appelant (fire-and-forget) : on est déjà
+  /// dans un gestionnaire d'erreur, il ne doit rien pouvoir relancer.
+  static Future<void> logCrash(String kind, Object error, StackTrace? stack) {
+    final when = DateTime.now().toIso8601String();
+    // Pile tronquée : les premières lignes suffisent à situer l'origine, et
+    // SharedPreferences n'est pas fait pour stocker des kilo-octets par entrée.
+    final head = (stack?.toString() ?? '')
+        .split('\n')
+        .take(6)
+        .join('\n');
+    final entry = '$when [$kind] $error\n$head';
+    final log = [entry, ...getCrashLog()].take(_crashLogMax).toList();
+    return _prefs.setStringList(_crashLogKey, log);
+  }
+
+  static Future<void> clearCrashLog() => _prefs.remove(_crashLogKey);
+
   // Favorites
   static const String _favoritesKey = 'favorites';
 
@@ -275,6 +304,28 @@ class AppStorage {
 
   static Future<void> clearXtreamConfig() async {
     await _prefs.remove(_xtreamKey);
+  }
+
+  // --- Canal Telegram (films/séries via TDLib embarqué) ---
+  static const String _telegramChannelKey = 'telegram_channel';
+  static const String _telegramChatIdKey = 'telegram_chat_id';
+
+  /// Identifiant public du canal (sans @), vide si non configuré.
+  static String getTelegramChannel() =>
+      _prefs.getString(_telegramChannelKey) ?? '';
+
+  /// chat_id résolu par TDLib. Mémorisé pour éviter de re-résoudre le canal
+  /// (et donc un aller-retour réseau) à chaque démarrage.
+  static int getTelegramChatId() => _prefs.getInt(_telegramChatIdKey) ?? 0;
+
+  static Future<void> setTelegramChannel(String username, int chatId) async {
+    await _prefs.setString(_telegramChannelKey, username);
+    await _prefs.setInt(_telegramChatIdKey, chatId);
+  }
+
+  static Future<void> clearTelegramChannel() async {
+    await _prefs.remove(_telegramChannelKey);
+    await _prefs.remove(_telegramChatIdKey);
   }
 
   // --- Source Daddylive (optionnelle, étude éducative) ---

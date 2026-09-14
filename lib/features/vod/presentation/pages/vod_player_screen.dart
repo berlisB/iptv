@@ -6,6 +6,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:iptv/config/theme/color/app_color.dart';
 import 'package:iptv/core/storage/app_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:iptv/features/player/provider/mini_player_provider.dart';
 import 'package:iptv/features/player/provider/mpv_config.dart';
 import 'package:iptv/features/player/presentation/widgets/player_tracks_sheet.dart';
 import 'package:media_kit/media_kit.dart';
@@ -69,6 +71,10 @@ class _VodPlayerScreenState extends State<VodPlayerScreen> {
   @override
   void initState() {
     super.initState();
+    // Le live tourne peut-être encore en mini-player : on libère son décodeur
+    // avant d'en ouvrir un second, sinon deux instances mpv décodent en
+    // parallèle et l'app tombe sur les appareils à décodeurs limités.
+    context.read<MiniPlayerProvider>().releaseDecoder();
     _initPlayer();
   }
 

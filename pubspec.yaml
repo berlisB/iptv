@@ -53,6 +53,14 @@ dependencies:
   # File picker (sous-titres externes)
   file_picker: ^8.1.7
 
+  # Telegram (TDLib embarqué : lecture des mp4 du canal, sans serveur).
+  # ⚠️ Build Android : lib native servie par GitHub Packages Maven, qui exige
+  # une authentification même en public. Dans ~/.gradle/gradle.properties :
+  #   gpr.user=<login github>
+  #   gpr.key=<token github, scope read:packages>
+  libtdjson: ^0.3.0
+  path: ^1.9.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

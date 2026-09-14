@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +11,9 @@ import 'package:iptv/features/vod/domain/media_entity.dart';
 import 'package:iptv/features/vod/domain/anime_entity.dart';
 import 'package:iptv/features/vod/presentation/pages/vod_player_screen.dart';
 import 'package:iptv/features/vod/provider/vod_provider.dart';
+import 'package:iptv/features/telegram/data/telegram_service.dart';
+import 'package:iptv/features/telegram/presentation/telegram_section.dart';
+import 'package:iptv/features/telegram/provider/telegram_provider.dart';
 
 /// Écran VOD (Films, Séries & Animés).
 class VodScreen extends StatefulWidget {
@@ -60,13 +65,18 @@ class _VodScreenState extends State<VodScreen> {
                 _buildCategoryChips(vod),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: vod.isLoading
-                      ? const LoadingShimmer()
-                      : vod.selectedCategory == VodCategory.anime
-                          ? _buildAnimeSection(vod)
-                          : vod.searchQuery.isNotEmpty
-                              ? _buildSearchResults(vod)
-                              : _buildContent(vod),
+                  // Le canal Telegram a sa propre source et son propre état de
+                  // chargement : il court-circuite le pipeline TMDB, y compris
+                  // son shimmer.
+                  child: vod.selectedCategory == VodCategory.telegram
+                      ? const TelegramSection()
+                      : vod.isLoading
+                          ? const LoadingShimmer()
+                          : vod.selectedCategory == VodCategory.anime
+                              ? _buildAnimeSection(vod)
+                              : vod.searchQuery.isNotEmpty
+                                  ? _buildSearchResults(vod)
+                                  : _buildContent(vod),
                 ),
               ],
             );
@@ -107,15 +117,40 @@ class _VodScreenState extends State<VodScreen> {
     );
   }
 
+  /// Route la recherche vers la source actuellement affichée.
+  void _search(VodProvider vod, String query) {
+    if (vod.selectedCategory == VodCategory.telegram) {
+      context.read<TelegramProvider>().search(query);
+    } else {
+      vod.search(query);
+    }
+    setState(() {}); // rafraîchit la croix d'effacement
+  }
+
+  /// TDLib n'est démarré qu'à la première ouverture de l'onglet : l'init
+  /// native et la lecture du cache ne doivent pas peser sur les utilisateurs
+  /// qui n'utilisent pas le canal.
+  void _onCategorySelected(VodProvider vod, VodCategory category) {
+    vod.setCategory(category);
+    if (category == VodCategory.telegram) {
+      final tg = context.read<TelegramProvider>();
+      if (tg.authState == TelegramAuthState.idle) unawaited(tg.init());
+    }
+  }
+
   Widget _buildSearchBar(VodProvider vod) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: TextField(
         controller: _searchController,
         style: AppTypography.body2.copyWith(color: AppColor.textPrimary),
-        onChanged: (q) => vod.search(q),
+        // La recherche vise la source affichée : chercher dans le canal
+        // Telegram ne doit pas interroger TMDB, et inversement.
+        onChanged: (q) => _search(vod, q),
         decoration: InputDecoration(
-          hintText: 'Rechercher film, série ou animé...',
+          hintText: vod.selectedCategory == VodCategory.telegram
+              ? 'Rechercher dans le canal...'
+              : 'Rechercher film, série ou animé...',
           hintStyle: AppTypography.body2.copyWith(color: AppColor.textMuted),
           prefixIcon: const Icon(Icons.search, color: AppColor.textMuted, size: 20),
           suffixIcon: _searchController.text.isNotEmpty
@@ -123,7 +158,7 @@ class _VodScreenState extends State<VodScreen> {
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: () {
                     _searchController.clear();
-                    vod.search('');
+                    _search(vod, '');
                   },
                 )
               : null,
@@ -145,6 +180,7 @@ class _VodScreenState extends State<VodScreen> {
       (VodCategory.popular, 'Populaires', Icons.star_outline),
       (VodCategory.movies, 'Films', Icons.movie_outlined),
       (VodCategory.tv, 'Séries', Icons.tv_outlined),
+      (VodCategory.telegram, 'Mon canal', Icons.telegram),
       (VodCategory.anime, 'Animés', Icons.animation_outlined),
       (VodCategory.action, 'Action', Icons.local_fire_department_outlined),
       (VodCategory.comedy, 'Comédie', Icons.emoji_emotions_outlined),
@@ -177,7 +213,7 @@ class _VodScreenState extends State<VodScreen> {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
               selected: isSelected,
-              onSelected: (_) => vod.setCategory(cat),
+              onSelected: (_) => _onCategorySelected(vod, cat),
               backgroundColor: AppColor.cardColor,
               selectedColor: AppColor.primaryColor,
               side: BorderSide.none,

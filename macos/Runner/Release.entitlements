@@ -4,5 +4,9 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- Connexions sortantes : requis sous sandbox pour TDLib (MTProto) comme
+	     pour les appels HTTP du catalogue. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>

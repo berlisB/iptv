@@ -52,8 +52,11 @@ class HomeProvider extends ChangeNotifier {
     'romance': 'Films & Séries', 'crime': 'Films & Séries',
     'mystery': 'Films & Séries', 'sci-fi': 'Films & Séries',
     'western': 'Films & Séries', 'war': 'Films & Séries',
-    // Divertissement
-    'entertainment': 'Divertissement', 'general': 'Divertissement',
+    // Divertissement — 'general' est volontairement absent : une chaîne
+    // généraliste n'est pas une chaîne de divertissement, et la classer ainsi
+    // noyait les vraies chaînes de divertissement (miroir de CATEGORY_MAP
+    // dans tools/healthcheck.py).
+    'entertainment': 'Divertissement',
     'variety': 'Divertissement', 'comedy': 'Divertissement',
     'reality': 'Divertissement', 'game': 'Divertissement',
     'talk': 'Divertissement', 'classic': 'Divertissement',
@@ -142,6 +145,11 @@ class HomeProvider extends ChangeNotifier {
     if (lower == 'undefined' || lower == 'autres' || lower == 'uncategorized'
         || lower == 'other' || lower == 'misc') {
       return 'Autres';
+    }
+    // 'general' n'apporte aucune information de genre, mais désigne bien une
+    // chaîne généraliste : même bucket que le catalogue v3, pas 'Autres'.
+    if (lower == 'general' || lower == 'generale' || lower == 'général') {
+      return 'Général';
     }
     // Check if it's a country name → put in Général
     if (_countryNames.contains(lower)) return 'Général';
@@ -289,25 +297,86 @@ class HomeProvider extends ChangeNotifier {
   }
 
   /// Bascule entre "Sélection fiable" et "Explorer".
-  void setMode(CatalogMode mode) {
+  ///
+  /// Le passage en Explorer déclenche le chargement des sources brutes si
+  /// elles ne le sont pas encore : c'est le prix payé UNE fois, au moment où
+  /// l'utilisateur les demande, plutôt qu'à chaque démarrage pour tout le
+  /// monde.
+  Future<void> setMode(CatalogMode mode) async {
     if (_mode == mode) return;
     _mode = mode;
     _selectedGroup = 'Tout';
+
+    if (!isReliableMode && !_exploreLoaded) {
+      _isLoading = true;
+      notifyListeners();
+      await _loadExploreSources();
+      _rebuildLookupPool();
+      _isLoading = false;
+    }
+
     _recomputeBase();
     _applyFilters();
     notifyListeners();
   }
 
+  /// Les sources brutes (mode Explorer) sont-elles déjà chargées ?
+  bool _exploreLoaded = false;
+  Future<void>? _exploreLoading;
+
   Future<void> loadChannels() async {
     _isLoading = true;
     _showHidden = AppStorage.getShowHidden();
     _showGeoBlocked = AppStorage.getShowGeoBlocked();
+    // Lu ici et pas dans le chargement Explorer : le toggle des Réglages doit
+    // refléter le réglage même quand les sources brutes ne sont pas chargées.
+    _daddyliveEnabled = AppStorage.getDaddyliveEnabled();
     notifyListeners();
 
     // Load blocklist
     _blocklist = await M3uDataSource.loadBlocklist();
     _blocklist.addAll(AppStorage.getLocalBlocklist());
 
+    // Catalogue curé : c'est la SEULE source du mode Fiable, celui par défaut.
+    _catalogChannels = await _channelService.loadCatalog();
+    debugPrint('[IPTV] Catalogue curé: ${_catalogChannels.length} chaînes');
+
+    // Les sources brutes ne sont chargées que si elles servent vraiment.
+    // Auparavant le démarrage téléchargeait et parsait ~13000 chaînes
+    // supplémentaires que le mode Fiable n'affiche jamais : le parsing M3U est
+    // synchrone sur l'isolate UI, et le pic mémoire cumulé des deux jeux de
+    // données faisait tomber l'app au lancement.
+    // Un abonnement Xtream fait exception : ce sont les chaînes que
+    // l'utilisateur paie, on ne le fait pas attendre pour y accéder.
+    final needsExploreNow =
+        !isReliableMode || AppStorage.getXtreamConfig() != null;
+    if (needsExploreNow) {
+      await _loadExploreSources();
+    }
+
+    _rebuildLookupPool();
+    _recomputeBase();
+    _loadRecentAndFrequent();
+    _applyFilters();
+
+    _isLoading = false;
+    notifyListeners();
+
+    _validateCatalogInBackground();
+  }
+
+  /// Charge et prépare les sources brutes du mode Explorer. Idempotent, et
+  /// sûr en cas d'appels concurrents (bascule de mode pendant le chargement).
+  Future<void> _loadExploreSources() {
+    if (_exploreLoaded) return Future.value();
+    return _exploreLoading ??= _doLoadExploreSources()
+      ..whenComplete(() {
+        _exploreLoaded = true;
+        _exploreLoading = null;
+      });
+  }
+
+  Future<void> _doLoadExploreSources() async {
     // Load playlists
     final m3uContent = await M3uDataSource.loadAllPlaylists();
     final parsed = M3uParser.parse(m3uContent);
@@ -325,7 +394,6 @@ class HomeProvider extends ChangeNotifier {
     }
 
     // Source Daddylive (étude éducative) : activée dans les paramètres.
-    _daddyliveEnabled = AppStorage.getDaddyliveEnabled();
     if (_daddyliveEnabled) {
       final daddyliveChannels = await DaddyliveService.fetchAllChannels();
       if (daddyliveChannels.isNotEmpty) {
@@ -360,19 +428,19 @@ class HomeProvider extends ChangeNotifier {
 
     debugPrint('[IPTV] After merge: ${_allChannels.length} channels '
         '(${_allChannels.fold<int>(0, (s, c) => s + c.backupUrls.length)} backup sources)');
+  }
 
-    // Catalogue curé (mode "Sélection fiable") : rapide (asset local).
-    _catalogChannels = await _channelService.loadCatalog();
-    debugPrint('[IPTV] Catalogue curé: ${_catalogChannels.length} chaînes');
-
-    // Pool union par id (favoris/récents/EPG/fiables) — catalogue prioritaire.
+  /// Pool union par id (favoris/récents/EPG) — catalogue prioritaire.
+  /// Reconstruit après chaque arrivée de source, car `_allChannels` peut être
+  /// encore vide au démarrage en mode Fiable.
+  void _rebuildLookupPool() {
     final seenIds = <String>{};
     _lookupPool = [
       for (final c in [..._catalogChannels, ..._allChannels])
         if (seenIds.add(c.id)) c,
     ];
 
-    // Build normalized group mapping (per-channel because isAdult depends on name)
+    // Mapping de groupe normalisé (par chaîne, car isAdult dépend du nom).
     _normalizedGroups.clear();
     for (final c in _lookupPool) {
       final key = '${c.group}|${c.isAdult}';
@@ -380,17 +448,6 @@ class HomeProvider extends ChangeNotifier {
         _normalizedGroups[key] = _normalizeGroup(c.group, isAdult: c.isAdult);
       }
     }
-
-    _recomputeBase();
-    _loadRecentAndFrequent();
-    _applyFilters();
-
-    _isLoading = false;
-    notifyListeners();
-
-    // Validation des flux du catalogue en arrière-plan (non bloquant) : met à
-    // jour les scores, puis on rafraîchit la base si le mode Fiable est actif.
-    _validateCatalogInBackground();
   }
 
   /// (Re)calcule la base affichée selon le mode et reconstruit les catégories.
@@ -470,21 +527,28 @@ class HomeProvider extends ChangeNotifier {
           c,
     ];
 
+    // Les résultats sont accumulés puis appliqués UNE fois. Reconstruire la
+    // liste à chaque lot de 10 coûtait un parcours complet du catalogue par
+    // lot — soit des dizaines de reconstructions de 12000+ entrées pendant que
+    // l'utilisateur fait défiler la grille.
     const batchSize = 10;
+    final allStatuses = <String, ChannelStatus>{};
     for (var i = 0; i < toValidate.length; i += batchSize) {
       final batch = toValidate.skip(i).take(batchSize).toList();
-      final statuses =
-          await _channelService.validateBatch(batch, concurrency: 3);
-
-      _catalogChannels = _catalogChannels
-          .map((c) => statuses.containsKey(c.id)
-              ? c.copyWith(
-                  status: statuses[c.id],
-                  reliabilityScore: AppStorage.getScore(c.id),
-                )
-              : c)
-          .toList();
+      allStatuses.addAll(
+        await _channelService.validateBatch(batch, concurrency: 3),
+      );
     }
+    if (allStatuses.isEmpty) return;
+
+    _catalogChannels = _catalogChannels
+        .map((c) => allStatuses.containsKey(c.id)
+            ? c.copyWith(
+                status: allStatuses[c.id],
+                reliabilityScore: AppStorage.getScore(c.id),
+              )
+            : c)
+        .toList();
 
     if (isReliableMode) {
       _recomputeBase();
