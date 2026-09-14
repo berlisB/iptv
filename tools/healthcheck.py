@@ -11,11 +11,17 @@ Sources testées = les mêmes que l'app (services FAST propres + broadcasters
 officiels). L'index iptv-org (~8000) est optionnel (INCLUDE_MASTER=1) car volu-
 mineux. Aucune source piratée n'est testée ni publiée.
 
+Classification : les FAST groupent leurs playlists par PAYS, le genre n'est
+donc pas dans le M3U. tools/enrich.py va le chercher à la source (taxonomie du
+provider + index iptv-org) et classify() l'applique par autorité décroissante.
+
 Env :
-  INCLUDE_MASTER=1   teste aussi iptv-org/index.m3u (lent)
+  INCLUDE_MASTER=1   teste aussi iptv-org/index.m3u (~11000 flux, +10 min)
   MAX_CHANNELS=N     plafond de flux testés (def 6000) ; le surplus est LOGUÉ
   CONCURRENCY=N      requêtes simultanées (def 80)
   TIMEOUT=N          timeout par flux en s (def 8)
+  MAX_SHRINK=0.20    perte de chaînes tolérée vs catalogue publié (def 20%)
+  ALLOW_SHRINK=1     publie malgré une perte au-delà du seuil
 """
 import asyncio
 import datetime
@@ -24,6 +30,8 @@ import os
 import re
 import sys
 import aiohttp
+
+import enrich
 
 OFFICIAL_BROADCASTERS = """\
 #EXTM3U
@@ -122,7 +130,7 @@ CATEGORY_MAP = {
     "romance": "Films & Séries", "crime": "Films & Séries",
     "mystery": "Films & Séries", "sci-fi": "Films & Séries",
     "western": "Films & Séries", "war": "Films & Séries",
-    "entertainment": "Divertissement", "general": "Divertissement",
+    "entertainment": "Divertissement",
     "variety": "Divertissement", "comedy": "Divertissement",
     "reality": "Divertissement", "game": "Divertissement",
     "talk": "Divertissement", "classic": "Divertissement",
@@ -151,6 +159,16 @@ CATEGORY_MAP = {
     "cctv": "TV Chine",
 }
 
+# group-title qui ne portent aucune information : on les traverse sans rien
+# décider, pour laisser l'index iptv-org puis les mots-clés du nom trancher.
+# Sans ce garde-fou, les 2653 chaînes group-title="General" de l'index
+# iptv-org écrasaient un genre connu par un fourre-tout.
+UNINFORMATIVE_GROUPS = {
+    "general", "undefined", "uncategorized", "autres", "other", "others",
+    "misc", "miscellaneous", "n/a", "na", "unknown", "divers", "generale",
+    "général", "générale", "tv", "iptv", "live", "channels",
+}
+
 # group-title « pays » → ISO-2 (les FAST listent leurs chaînes par pays).
 COUNTRY_ISO = {
     "argentina": "AR", "australia": "AU", "austria": "AT", "belgium": "BE",
@@ -177,22 +195,74 @@ COUNTRY_ISO = {
     "usa": "US", "uk": "GB", "uae": "AE",
 }
 
-# Mots-clés du NOM d'une chaîne → catégorie (quand le group-title est un pays).
+# Mots-clés du NOM d'une chaîne → catégorie. Dernier recours, quand ni le
+# provider ni iptv-org ne connaissent la chaîne (typiquement Plex, dont le
+# .channels.json ne porte aucun genre, et les sources sans tvg-id).
+#
+# L'ordre compte : la première famille qui matche gagne, donc on va du plus
+# spécifique au plus générique. « Adulte 🔞 » passe en tête pour qu'une chaîne
+# érotique ne soit jamais classée ailleurs par un mot générique ; Shopping
+# avant Lifestyle sinon « Home Shopping Network » tombe dans Lifestyle sur
+# « home » ; Sport avant Films & Séries sinon « Action Sports » devient un
+# film d'action.
 NAME_KEYWORDS = [
-    (("news", "info", "noticias", "nachrichten", "24/7 ", " 24",), "Actualités"),
-    (("sport", "espn", "motor", "racing", "fight", "wrestling", "poker",
-      "golf", "tennis", "soccer", "football", "nba", "nfl", "mlb"), "Sport"),
-    (("kids", "junior", "cartoon", "toon", "anime", "baby", "teen"), "Enfants"),
-    (("music", "mtv", "hits", "radio", "vevo", "karaoke"), "Musique"),
-    (("doc", "nature", "wild", "history", "science", "discovery", "planet",
-      "geo", "crime "), "Documentaires"),
-    (("cine", "movie", "film", "series", "drama", "thriller", "action",
-      "western", "hollywood"), "Films & Séries"),
-    (("cook", "food", "travel", "fashion", "home", "lifestyle"), "Lifestyle"),
-    (("comedy", "humor", "fun ", "gameshow", "reality"), "Divertissement"),
     (("xxx", "porn", "adult", "18+", "milf", "erotic", "erotik", "babes",
       "playboy", "hustler", "dorcel", "redlight", "venus", "cam girl",
-      "camtv", "naked"), "Adulte 🔞"),
+      "camtv", "naked", "brazzers", "penthouse", "sexy", "seduction",
+      "blue movie", "vivid", "private tv"), "Adulte 🔞"),
+    (("shop", "shopping", "teleshop", "qvc", "hsn", "auction", "bid ",
+      "market"), "Shopping"),
+    (("church", "gospel", "islam", "quran", "coran", "bible", "faith",
+      "jesus", "christ", "catholic", "vatican", "hindu", "buddh",
+      "prayer", "prière", "religio", "spiritual", "mecca", "sunna",
+      "ewtn", "daystar"), "Religion"),
+    (("sport", "espn", "motor", "racing", "fight", "wrestling", "poker",
+      "golf", "tennis", "soccer", "football", "nba", "nfl", "mlb", "nhl",
+      "rugby", "cricket", "boxing", "ufc", "mma", "cycling", "athletic",
+      "olympic", "basket", "baseball", "hockey", "surf", "skate", "fitness",
+      "gym", "darts", "billiard", "snooker", "bein", "dazn", "eurosport",
+      "formula", "f1 ", "nascar", "motogp", "rally", "esport", "gaming"),
+     "Sport"),
+    (("news", "info", "noticias", "nachrichten", "notizie", "nieuws",
+      "nyheter", "24/7 ", " 24", "actu", "journal", "press", "report",
+      "bulletin", "weather", "meteo", "météo", "politic", "parliament",
+      "senate", "congress", "cnn", "bbc news", "sky news", "msnbc",
+      "fox news", "newsmax", "bloomberg", "cnbc", "reuters", "afp"),
+     "Actualités"),
+    (("kids", "junior", "cartoon", "toon", "baby", "teen", "nick",
+      "disney", "boomerang", "pokemon", "peppa", "barbie", "lego",
+      "sesame", "cbeebies", "kika", "gulli", "tiji", "piwi", "enfant",
+      "niño", "bambin", "child", "preschool"), "Enfants"),
+    (("music", "mtv", "hits", "radio", "vevo", "karaoke", "musique",
+      "musica", "musik", "jazz", "blues", "rock", "pop ", "classical",
+      "opera", "reggae", "salsa", "hip hop", "hip-hop", "rap ", "country",
+      "dance", "electro", "techno", "chill", "lounge", "ambient",
+      "concert", "billboard", "trax", "melody"), "Musique"),
+    (("doc", "nature", "wild", "history", "histoire", "science", "discovery",
+      "planet", "geo", "crime ", "true crime", "animal", "ocean", "space",
+      "cosmos", "explorer", "investigat", "forensic", "archeo", "museum",
+      "curiosity", "knowledge", "savoir", "wissen", "natgeo",
+      "national geographic", "smithsonian", "pbs", "arte"), "Documentaires"),
+    (("cine", "movie", "film", "series", "série", "serie", "drama",
+      "thriller", "action", "western", "hollywood", "bollywood", "horror",
+      "terror", "sci-fi", "scifi", "fantasy", "anime", "manga", "novela",
+      "telenovela", "sitcom", "classic tv", "mystery", "suspense",
+      "romance", "blockbuster", "premiere", "box office", "amc", "tnt",
+      "sundance", "mgm", "paramount", "sony", "warner", "universal"),
+     "Films & Séries"),
+    (("cook", "food", "travel", "fashion", "home", "lifestyle", "garden",
+      "diy", "craft", "health", "wellness", "yoga", "beauty", "style",
+      "decor", "house", "real estate", "voyage", "cuisine", "chef",
+      "recipe", "gourmet", "wine", "outdoor", "fishing", "hunting",
+      "camping", "pet ", "dog ", "cat "), "Lifestyle"),
+    (("comedy", "humor", "humour", "fun ", "gameshow", "game show",
+      "reality", "talk", "variety", "laugh", "sitcom", "stand up",
+      "stand-up", "prank", "fail", "quiz", "celebrity", "gossip",
+      "showbiz", "award"), "Divertissement"),
+    (("business", "finance", "money", "economy", "stock", "invest",
+      "trading", "entrepreneur"), "Business"),
+    (("auto", "car ", "cars ", "truck", "moto ", "garage", "gadget",
+      "computer"), "Auto & Tech"),
 ]
 
 # Tokens de qualité retirés du nom pour l'identité (pas de regex \b : son
@@ -200,6 +270,10 @@ NAME_KEYWORDS = [
 QUALITY_TOKENS = {"4k", "uhd", "fhd", "hd", "sd",
                   "1080", "1080p", "720", "720p", "480", "480p"}
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
+
+# Affilié local américain : « Very Alabama by WVTM », « Denver News by KMGH ».
+# Les indicatifs FCC commencent tous par W (est du Mississippi) ou K (ouest).
+_US_AFFILIATE_RE = re.compile(r"\bby [WK][A-Z]{2,3}\b")
 
 _EXTINF_ATTRS = {
     "tvg_id": re.compile(r'tvg-id="([^"]*)"'),
@@ -226,11 +300,28 @@ def fnv1a64_hex(text):
     return format(h, "016x")
 
 
+def strip_feed_suffix(tvg_id):
+    """Retire le suffixe de flux des tvg-id de l'index iptv-org.
+
+    L'index publie une entrée par variante de qualité : « 00sReplay.us@SD » et
+    « 00sReplay.us@HD » désignent la MÊME chaîne. Sans ce nettoyage :
+      - l'identité éclate en deux chaînes au lieu d'une à deux URLs ;
+      - l'extraction du pays lit « us@sd » et échoue ;
+      - la jointure avec l'API iptv-org, qui expose « 00sReplay.us », rate.
+
+    La casse est volontairement préservée : EpgIdMapping (Dart) indexe des clés
+    sensibles à la casse comme 'France24English.fr'.
+    DOIT rester identique à stripFeedSuffix de lib/core/utils/stable_id.dart.
+    """
+    return tvg_id.split("@", 1)[0].strip()
+
+
 def parse_extinf(line):
     """Extrait tvg-id/logo/language/group + nom (après la dernière virgule
     hors attributs)."""
     meta = {k: (rx.search(line).group(1) if rx.search(line) else "")
             for k, rx in _EXTINF_ATTRS.items()}
+    meta["tvg_id"] = strip_feed_suffix(meta["tvg_id"])
     # Le nom = tout ce qui suit la virgule terminant les attributs.
     name_match = re.search(r'(?:"|:-?\d+)\s*,\s*(.+)$', line)
     meta["name"] = (name_match.group(1) if name_match else "").strip()
@@ -257,8 +348,17 @@ def provider_for(source_url, stream_url):
     return "other"
 
 
-def classify(meta):
-    """(country ISO-2, category) depuis group-title + nom + tvg-id."""
+def classify(meta, index=None):
+    """(country ISO-2, category) par cascade d'autorité décroissante.
+
+    1. le genre publié par le provider pour SA chaîne (Pluto, Samsung, Roku) ;
+    2. le group-title de la playlist source, quand c'est un genre et non un
+       pays (Roku, Tubi, Free-TV, index iptv-org) ;
+    3. l'index communautaire iptv-org, sur les tvg-id pointés ;
+    4. les décrochages locaux américains, reconnaissables à leur nommage ;
+    5. les mots-clés du nom ;
+    6. « Général », qui devient un vrai aveu d'ignorance et non un fourre-tout.
+    """
     group = meta["group"].strip().lower()
     name = meta["name"].lower()
     tvg_id = meta["tvg_id"]
@@ -268,16 +368,36 @@ def classify(meta):
         suffix = tvg_id.rsplit(".", 1)[-1].lower()
         if len(suffix) == 2 and suffix.isalpha():
             country = "GB" if suffix == "uk" else suffix.upper()
+    if not country and index:
+        country = index.country_for(tvg_id)
 
-    # group-title = genre → mapping direct (exact puis contains).
-    if group and group not in COUNTRY_ISO:
+    # 1. taxonomie du provider — il connaît ses chaînes mieux que nous.
+    if index:
+        category = index.provider_category(tvg_id)
+        if category:
+            return country, category
+
+    # 2. group-title = genre → mapping direct (exact puis contains).
+    if group and group not in COUNTRY_ISO and group not in UNINFORMATIVE_GROUPS:
         if group in CATEGORY_MAP:
             return country, CATEGORY_MAP[group]
         for key, cat in CATEGORY_MAP.items():
             if key in group:
                 return country, cat
 
-    # group pays (ou inconnu) → mots-clés du nom.
+    # 3. index iptv-org.
+    if index:
+        category = index.org_category(tvg_id)
+        if category:
+            return country, category
+
+    # 4. décrochages locaux américains : le service LocalNow préfixe ses ids
+    # par « LN_ », et les affiliés se nomment « … by WVTM » / « … by KTLA »
+    # (indicatifs FCC, toujours en W ou K). Ce sont des chaînes d'info locale.
+    if tvg_id.startswith("LN_") or _US_AFFILIATE_RE.search(meta["name"]):
+        return country or "US", "Actualités"
+
+    # 5. mots-clés du nom.
     padded = f" {name} "
     for keywords, cat in NAME_KEYWORDS:
         if any(kw in padded for kw in keywords):
@@ -289,7 +409,7 @@ def channel_id(tvg_id, name):
     return tvg_id.lower() if tvg_id else f"n-{fnv1a64_hex(normalize_name(name))}"
 
 
-def build_catalog(alive):
+def build_catalog(alive, index=None):
     """alive = [(extinf, url, source_url)] → liste de chaînes v3 dédupliquées
     par identité, URLs mergées (cap 6, ordre de découverte = officiel d'abord)."""
     by_id = {}
@@ -301,14 +421,21 @@ def build_catalog(alive):
         cid = channel_id(meta["tvg_id"], meta["name"])
         entry = by_id.get(cid)
         if entry is None:
-            country, category = classify(meta)
+            country, category = classify(meta, index)
             if src in ADULT_SOURCES:
+                category = "Adulte 🔞"
+            # iptv-org marque le NSFW indépendamment du genre : une chaîne
+            # signalée reste derrière le toggle adulte de l'app même si sa
+            # catégorie annoncée est anodine.
+            elif index and index.is_nsfw(meta["tvg_id"]):
                 category = "Adulte 🔞"
             lang = meta["language"].split(";")[0].strip().lower()
             by_id[cid] = {
                 "id": cid,
                 "name": meta["name"],
-                "logo": meta["logo"],
+                # Le provider a souvent un logo là où la playlist n'en a pas.
+                "logo": (meta["logo"]
+                         or (index.logo_for(meta["tvg_id"]) if index else "")),
                 "tvgId": meta["tvg_id"],
                 "country": country,
                 "category": category,
@@ -338,7 +465,7 @@ CURATED_CAT_MAP = {
 }
 
 
-def curated_category(c):
+def curated_category(c, index=None):
     cat = c.get("category", "")
     if cat in CURATED_CAT_MAP:
         return CURATED_CAT_MAP[cat]
@@ -347,10 +474,10 @@ def curated_category(c):
         return "TV Chine"
     meta = {"group": "", "name": c["name"], "tvg_id": c.get("tvgId", ""),
             "language": c.get("language", ""), "logo": ""}
-    return classify(meta)[1]
+    return classify(meta, index)[1]
 
 
-def merge_curated(channels, by_id):
+def merge_curated(channels, by_id, index=None):
     """Fusionne assets/catalog/channels.json : les chaînes éditoriales gagnent
     curated/priority, leur URL passe en tête, et héritent des backups FAST."""
     try:
@@ -369,7 +496,7 @@ def merge_curated(channels, by_id):
                 "logo": c.get("logo", ""),
                 "tvgId": c.get("tvgId", ""),
                 "country": c.get("country", ""),
-                "category": curated_category(c),
+                "category": curated_category(c, index),
                 "language": c.get("language", ""),
                 "provider": "curated",
                 "urls": [c["streamUrl"]],
@@ -381,9 +508,50 @@ def merge_curated(channels, by_id):
                                        if u != c["streamUrl"]]
             entry["urls"] = urls[:6]
             entry["provider"] = "curated"
-            entry["category"] = curated_category(c)
+            entry["category"] = curated_category(c, index)
         entry["curated"] = True
         entry["priority"] = c.get("priority", 99)
+
+
+def previous_channel_count():
+    """Nombre de chaînes du catalogue actuellement publié, 0 s'il n'y en a pas."""
+    try:
+        with open("catalog.json", encoding="utf-8") as f:
+            return len(json.load(f).get("channels", []))
+    except (OSError, ValueError):
+        return 0
+
+
+def shrink_refused(channels):
+    """Vrai s'il faut REFUSER de publier ce catalogue car il a trop rétréci.
+
+    Une source injoignable emporte toutes ses chaînes d'un coup : le run du
+    2026-09-12 aurait publié un catalogue amputé de 3043 chaînes parce que
+    apsattv ne répondait pas. Sans ce garde-fou, une panne passagère chez un
+    fournisseur dégrade l'app pour tout le monde jusqu'au run suivant.
+
+    Mieux vaut garder le catalogue précédent, encore valide, que publier un
+    catalogue appauvri. `ALLOW_SHRINK=1` force la publication quand la perte
+    est réelle et définitive (un service qui ferme).
+    """
+    if os.getenv("ALLOW_SHRINK") == "1":
+        return False
+    previous = previous_channel_count()
+    if previous == 0:
+        return False
+    max_shrink = float(os.getenv("MAX_SHRINK", "0.20"))
+    drop = (previous - len(channels)) / previous
+    if drop <= max_shrink:
+        return False
+    print(f"⚠ PUBLICATION REFUSÉE : {len(channels)} chaînes contre {previous} "
+          f"précédemment ({drop:.0%} de perte, seuil {max_shrink:.0%}).",
+          file=sys.stderr)
+    if FAILED_SOURCES:
+        print(f"  Cause probable : {len(FAILED_SOURCES)} source(s) "
+              f"injoignable(s) ci-dessus.", file=sys.stderr)
+    print("  Le catalogue précédent est conservé. Pour publier malgré tout : "
+          "ALLOW_SHRINK=1", file=sys.stderr)
+    return True
 
 
 def write_catalog(channels):
@@ -400,7 +568,13 @@ def write_catalog(channels):
         cats[c["category"]] = cats.get(c["category"], 0) + 1
     top = ", ".join(f"{k}:{v}" for k, v in
                     sorted(cats.items(), key=lambda kv: -kv[1])[:8])
+    total = max(1, len(channels))
+    # Le taux de « Général » est l'indicateur de santé de la classification :
+    # s'il remonte, c'est qu'une source d'enrichissement a lâché.
+    unclassified = 100 * cats.get("Général", 0) // total
+    no_logo = 100 * sum(1 for c in channels if not c["logo"]) // total
     print(f"Écrit catalog.json — {len(channels)} chaînes ({top})")
+    print(f"  Général : {unclassified}% — sans logo : {no_logo}%")
 
 
 def parse_m3u(text):
@@ -422,14 +596,54 @@ def parse_m3u(text):
     return pairs
 
 
+# Récupération des playlists sources. Une source perdue coûte TOUTES ses
+# chaînes d'un coup — l'incident du 2026-09-12 sur apsattv en a fait perdre
+# 3043 — donc on réessaie avant d'abandonner, et l'échec est rendu visible
+# dans le résumé plutôt que noyé dans stderr.
+SOURCE_ATTEMPTS = 3
+SOURCE_TIMEOUT = 45
+
+# Sources qui n'ont pas pu être lues sur ce run.
+FAILED_SOURCES = []
+
+
 async def fetch_text(session, url):
-    try:
-        async with session.get(url, headers=UA) as r:
-            if r.status == 200:
-                return await r.text(errors="ignore")
-    except Exception as e:  # noqa: BLE001
-        print(f"  [skip source] {url} ({e})", file=sys.stderr)
+    last_error = "statut inattendu"
+    for attempt in range(1, SOURCE_ATTEMPTS + 1):
+        try:
+            async with session.get(
+                url,
+                headers=UA,
+                allow_redirects=True,
+                timeout=aiohttp.ClientTimeout(total=SOURCE_TIMEOUT),
+            ) as r:
+                if r.status == 200:
+                    return await r.text(errors="ignore")
+                last_error = f"HTTP {r.status}"
+        except Exception as e:  # noqa: BLE001
+            last_error = str(e) or e.__class__.__name__
+        if attempt < SOURCE_ATTEMPTS:
+            # Backoff court : on vise le hoquet réseau passager, pas un hôte
+            # durablement mort qui ne ferait qu'allonger le job.
+            await asyncio.sleep(2 * attempt)
+    print(f"  [source perdue] {url} ({last_error})", file=sys.stderr)
+    FAILED_SOURCES.append(url)
     return ""
+
+
+async def fetch_json(session, url):
+    """JSON d'enrichissement, ou None. Jamais d'exception : une source de
+    métadonnées absente dégrade la classification, elle ne casse pas la CI."""
+    try:
+        async with session.get(url, headers=UA, allow_redirects=True,
+                               timeout=aiohttp.ClientTimeout(total=120)) as r:
+            if r.status != 200:
+                print(f"  [enrich] {url} → HTTP {r.status}", file=sys.stderr)
+                return None
+            return json.loads(await r.text(errors="ignore"))
+    except Exception as e:  # noqa: BLE001
+        print(f"  [enrich] {url} ({e})", file=sys.stderr)
+        return None
 
 
 async def is_alive(session, url, timeout):
@@ -460,11 +674,21 @@ async def main():
 
     connector = aiohttp.TCPConnector(limit=concurrency, ssl=False)
     async with aiohttp.ClientSession(connector=connector) as session:
-        # 1) récupérer toutes les playlists sources
+        # 1) playlists sources + index d'enrichissement, en parallèle
         sources = list(FREE_SERVICES) + list(ADULT_SOURCES)
         if include_master:
             sources.append(MASTER_INDEX)
-        texts = await asyncio.gather(*(fetch_text(session, u) for u in sources))
+        texts, index = await asyncio.gather(
+            asyncio.gather(*(fetch_text(session, u) for u in sources)),
+            enrich.build_index(lambda u: fetch_json(session, u)),
+        )
+        print(f"Index d'enrichissement : {len(index.provider)} chaînes "
+              f"providers + {len(index.iptv_org)} iptv-org")
+        if FAILED_SOURCES:
+            print(f"⚠ {len(FAILED_SOURCES)}/{len(sources)} sources "
+                  f"injoignables — le catalogue sera incomplet :")
+            for url in FAILED_SOURCES:
+                print(f"    {url}")
 
         # triplets (extinf, url, source) — la source sert à déduire le provider
         pairs = [(e, u, "official") for e, u in parse_m3u(OFFICIAL_BROADCASTERS)]
@@ -504,6 +728,21 @@ async def main():
     print(f"Vivants : {len(alive)}/{len(unique)} "
           f"({100 * len(alive) // max(1, len(unique))}%)")
 
+    # 4) catalog.json v3 : dédup par identité, classification, fusion curée.
+    # Construit AVANT toute écriture : le garde-fou anti-rétrécissement doit
+    # pouvoir tout annuler, y compris verified.m3u, sans laisser les deux
+    # fichiers désynchronisés.
+    channels, by_id = build_catalog(alive, index)
+    merge_curated(channels, by_id, index)
+    channels.sort(key=lambda c: (0 if c.get("curated") else 1,
+                                 c.get("priority", 99), c["name"].lower()))
+
+    if shrink_refused(channels):
+        # Sortie en succès : ce n'est pas une panne du script, c'est son
+        # garde-fou qui joue son rôle. La CI ne commitera rien puisque les
+        # fichiers sont inchangés.
+        return
+
     with open("verified.m3u", "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
         f.write(f"# Généré par tools/healthcheck.py — {len(alive)} flux vérifiés "
@@ -512,12 +751,6 @@ async def main():
             f.write(f"{ext}\n{url}\n")
 
     print("Écrit verified.m3u")
-
-    # 4) catalog.json v3 : dédup par identité, classification, fusion curée
-    channels, by_id = build_catalog(alive)
-    merge_curated(channels, by_id)
-    channels.sort(key=lambda c: (0 if c.get("curated") else 1,
-                                 c.get("priority", 99), c["name"].lower()))
     write_catalog(channels)
 
 

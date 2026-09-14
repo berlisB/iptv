@@ -14,10 +14,21 @@ const _qualityTokens = {
 final _nonAlnum = RegExp(r'[^a-z0-9]+');
 
 /// tvg-id lowercase si présent, sinon hash FNV-1a du nom normalisé.
-String stableChannelId({required String tvgId, required String name}) =>
-    tvgId.isNotEmpty
-        ? tvgId.toLowerCase()
-        : 'n-${fnv1a64Hex(normalizeName(name))}';
+String stableChannelId({required String tvgId, required String name}) {
+  final id = stripFeedSuffix(tvgId);
+  return id.isNotEmpty
+      ? id.toLowerCase()
+      : 'n-${fnv1a64Hex(normalizeName(name))}';
+}
+
+/// Retire le suffixe de flux des tvg-id de l'index iptv-org : « 00sReplay.us@SD »
+/// et « 00sReplay.us@HD » désignent la même chaîne, et doivent donc produire
+/// une seule identité.
+///
+/// La casse est volontairement préservée : [EpgIdMapping] indexe des clés
+/// sensibles à la casse comme 'France24English.fr'.
+/// DOIT rester identique à strip_feed_suffix de tools/healthcheck.py.
+String stripFeedSuffix(String tvgId) => tvgId.split('@').first.trim();
 
 /// Nom → clé d'identité : lowercase, sans ponctuation ni tokens de qualité.
 String normalizeName(String name) => name

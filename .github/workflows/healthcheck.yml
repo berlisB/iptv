@@ -9,9 +9,9 @@ on:
   workflow_dispatch: # déclenchement manuel
     inputs:
       include_master:
-        description: "Tester aussi iptv-org index (~8000, lent)"
+        description: "Tester aussi l'index iptv-org (~11000 flux, +10 min)"
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
@@ -23,7 +23,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # ~19000 flux à sonder : les morts consomment le timeout complet, d'où une
+    # marge large sur un job qui tournait en ~12 min avec 11000 flux.
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
 
@@ -36,9 +38,14 @@ jobs:
 
       - name: Run health-check
         env:
-          INCLUDE_MASTER: ${{ inputs.include_master && '1' || '' }}
-          MAX_CHANNELS: "16000"
-          CONCURRENCY: "100"
+          # Index iptv-org activé par défaut, y compris sur le cron : c'est lui
+          # qui apporte ~11000 flux supplémentaires, tous porteurs d'un tvg-id
+          # donc correctement classés. Décochable sur un run manuel.
+          INCLUDE_MASTER: >-
+            ${{ (github.event_name != 'workflow_dispatch'
+                 || inputs.include_master) && '1' || '' }}
+          MAX_CHANNELS: "24000"
+          CONCURRENCY: "150"
           TIMEOUT: "8"
         run: python tools/healthcheck.py
 

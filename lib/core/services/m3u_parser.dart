@@ -42,8 +42,10 @@ class M3uParser {
       final line = lines[i].trim();
 
       if (line.startsWith('#EXTINF:')) {
-        // Parse EXTINF attributes
-        tvgId = _extract(_tvgIdRegex, line);
+        // Parse EXTINF attributes. Le suffixe de flux (@SD/@HD) est retiré dès
+        // la lecture : c'est la forme canonique attendue par l'identité stable
+        // comme par le mapping EPG.
+        tvgId = stripFeedSuffix(_extract(_tvgIdRegex, line));
         name = _extractDisplayName(line);
 
         // Fallback: use tvg-name if display name is empty
