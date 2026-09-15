@@ -1,13 +1,15 @@
 # iptv
 
-Lecteur IPTV Flutter : chaînes live vérifiées, EPG, et films/séries depuis un
-canal Telegram.
+Lecteur IPTV Flutter : chaînes live vérifiées, EPG, et films/séries.
+
+La TV en direct fonctionne sans aucune configuration. Les deux sections
+ci-dessous couvrent le reste.
 
 ## Prérequis de build
 
-Le projet compile sans rien de ce qui suit, mais trois fonctionnalités restent
-inertes tant que leurs identifiants ne sont pas fournis. Aucun n'est devinable,
-d'où cette section.
+Le projet compile et se lance tel quel. Deux fonctionnalités restent inertes
+tant qu'on ne les active pas — aucune des deux n'étant devinable, d'où cette
+section.
 
 ### 1. Clé TMDB — affiches et synopsis
 
@@ -19,27 +21,39 @@ donc sans valeur de secret). Pour le vôtre, créez-en un sur
 flutter run --dart-define=TMDB_API_KEY=<votre jeton v4>
 ```
 
-### 2. Identifiants Telegram — section « Mon canal »
+### 2. Section Telegram — désactivée par défaut
 
-Créez une application sur [my.telegram.org](https://my.telegram.org), onglet
-*API development tools* :
+La lecture des films depuis un canal Telegram est **livrée mais inactive**.
+
+La raison est un choix de priorité : elle repose sur TDLib, dont la
+bibliothèque native est servie par GitHub Packages Maven, lequel exige une
+authentification **même pour un paquet public**. Tant que la dépendance est
+active, *tout* build Android échoue sur `401 Unauthorized` — y compris pour
+qui ne se sert pas du canal. Une fonctionnalité optionnelle ne doit pas
+bloquer la livraison des autres.
+
+Le code reste entièrement dans le dépôt et compilé : indexation du canal,
+correspondance TMDB, lecteur progressif et interface. Seul l'accès réseau
+passe par une frontière, `lib/features/telegram/data/tdlib_client.dart`, dont
+l'implémentation active est un bouchon. L'onglet « Mon canal » s'affiche et
+annonce que la fonctionnalité n'est pas incluse dans cette version.
+
+**Pour l'activer**, trois gestes :
 
 ```bash
-flutter run \
-  --dart-define=TELEGRAM_API_ID=123456 \
-  --dart-define=TELEGRAM_API_HASH=0123456789abcdef0123456789abcdef
+# 1. décommenter « libtdjson: ^0.3.0 » dans pubspec.yaml
+
+# 2. échanger les deux implémentations
+cd lib/features/telegram/data
+mv tdlib_client.dart tdlib_client_stub.dart.disabled
+mv tdlib_client_real.dart.disabled tdlib_client.dart
+
+# 3. récupérer la dépendance
+flutter pub get
 ```
 
-Sans ces valeurs, l'onglet s'affiche et explique ce qui manque, au lieu
-d'échouer silencieusement.
-
-### 3. Token GitHub — obligatoire pour compiler sur Android
-
-La bibliothèque native TDLib est servie par GitHub Packages Maven, qui exige
-une authentification **même pour un paquet public**. Sans token, le build
-échoue sur `401 Unauthorized` en résolvant `io.github.up9cloud:td`.
-
-Réglage unique, dans `~/.gradle/gradle.properties` :
+Il faut alors un token GitHub (scope `read:packages`) dans
+`~/.gradle/gradle.properties` :
 
 ```properties
 gpr.user=<votre login github>
@@ -53,6 +67,15 @@ suffit de l'exposer au job :
 env:
   GITHUB_ACTOR: ${{ github.actor }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Enfin, créez une application sur [my.telegram.org](https://my.telegram.org),
+onglet *API development tools*, et passez ses identifiants au build :
+
+```bash
+flutter run \
+  --dart-define=TELEGRAM_API_ID=123456 \
+  --dart-define=TELEGRAM_API_HASH=0123456789abcdef0123456789abcdef
 ```
 
 ## Pipeline de chaînes

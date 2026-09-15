@@ -53,13 +53,22 @@ dependencies:
   # File picker (sous-titres externes)
   file_picker: ^8.1.7
 
-  # Telegram (TDLib embarqué : lecture des mp4 du canal, sans serveur).
-  # ⚠️ Build Android : lib native servie par GitHub Packages Maven, qui exige
-  # une authentification même en public. Dans ~/.gradle/gradle.properties :
-  #   gpr.user=<login github>
-  #   gpr.key=<token github, scope read:packages>
-  libtdjson: ^0.3.0
   path: ^1.9.0
+
+  # Telegram (TDLib embarqué : lecture des mp4 du canal, sans serveur).
+  #
+  # DÉSACTIVÉ VOLONTAIREMENT. La lib native est servie par GitHub Packages
+  # Maven, qui exige une authentification même pour un paquet public : tant que
+  # cette ligne est active, TOUT build Android échoue sur un 401, y compris
+  # pour qui ne se sert pas du canal Telegram. Une fonctionnalité optionnelle
+  # ne doit pas bloquer la livraison des autres.
+  #
+  # Pour réactiver : décommenter ci-dessous, puis échanger les deux
+  # implémentations dans lib/features/telegram/data/ (voir le mode d'emploi en
+  # tête de tdlib_client.dart). Un token GitHub avec le scope read:packages
+  # sera alors nécessaire dans ~/.gradle/gradle.properties.
+  #
+  # libtdjson: ^0.3.0
 
 dev_dependencies:
   flutter_test:

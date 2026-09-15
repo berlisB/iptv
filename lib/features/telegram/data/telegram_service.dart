@@ -14,18 +14,20 @@
 ///   flutter run --dart-define=TELEGRAM_API_ID=123456 \
 ///               --dart-define=TELEGRAM_API_HASH=abcdef...
 ///
-/// ⚠️ Build Android : la lib native est servie par GitHub Packages Maven, qui
-/// exige une authentification même en public. Renseigner une fois pour toutes
-/// dans ~/.gradle/gradle.properties :
-///   `gpr.user=<login github>`
-///   `gpr.key=<token github avec le scope read:packages>`
+/// ⚠️ La bibliothèque native n'est PAS embarquée par défaut : elle est servie
+/// par GitHub Packages Maven, qui exige une authentification même pour un
+/// paquet public, et bloquait donc tout build Android sur un 401 — y compris
+/// pour qui ne se sert pas du canal. Voir `tdlib_client.dart` pour réactiver.
+///
+/// Tout ce fichier reste compilé et fonctionnel : seul l'accès réseau passe
+/// par [TdlibClient], dont l'implémentation active est un bouchon.
 library;
 
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:libtdjson/libtdjson.dart' as td;
+import 'package:iptv/features/telegram/data/tdlib_client.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -98,7 +100,12 @@ class TelegramService {
   /// Vrai si l'app a été compilée avec des identifiants Telegram.
   static bool get isConfigured => _apiId != 0 && _apiHash.isNotEmpty;
 
-  td.Service? _service;
+  /// Vrai si la bibliothèque native TDLib est embarquée dans ce build.
+  /// Distinct de [isConfigured] : l'interface doit dire « fonctionnalité
+  /// absente de cette version » plutôt que « identifiants manquants ».
+  static bool get isAvailable => tdlibAvailable;
+
+  TdlibClient? _client;
 
   final _authController =
       StreamController<TelegramAuthState>.broadcast();
@@ -122,7 +129,13 @@ class TelegramService {
 
   /// Démarre TDLib. Idempotent : un second appel ne recrée pas le client.
   Future<void> start() async {
-    if (_service != null) return;
+    if (_client != null) return;
+    if (!isAvailable) {
+      lastError = "La bibliothèque Telegram n'est pas embarquée dans cette "
+          'version de l\'app.';
+      _emit(TelegramAuthState.failed);
+      return;
+    }
     if (!isConfigured) {
       lastError = 'Identifiants Telegram absents : compilez avec '
           '--dart-define=TELEGRAM_API_ID et --dart-define=TELEGRAM_API_HASH';
@@ -142,11 +155,8 @@ class TelegramService {
       await Directory(dbDir).create(recursive: true);
       await Directory(filesDir).create(recursive: true);
 
-      _service = td.Service(
-        // Verbosité 1 = erreurs seulement. TDLib est très bavard par défaut
-        // et noierait les logs de l'app.
-        newVerbosityLevel: 1,
-        tdlibParameters: {
+      _client = createTdlibClient(
+        parameters: {
           'api_id': _apiId,
           'api_hash': _apiHash,
           'database_directory': dbDir,
@@ -159,10 +169,12 @@ class TelegramService {
           'device_model': _deviceModel,
           'application_version': '1.0.0',
         },
-        afterReceive: _onUpdate,
-        onReceiveError: (e) => debugPrint('[TG] erreur: ${e.message}'),
-        onStreamError: (e) => debugPrint('[TG] flux: $e'),
+        onUpdate: _onUpdate,
       );
+      if (_client == null) {
+        lastError = 'TDLib indisponible dans ce build.';
+        _emit(TelegramAuthState.failed);
+      }
     } catch (e) {
       // Cas le plus probable : la lib native n'est pas embarquée dans le build
       // (token GitHub Packages manquant côté Android).
@@ -183,8 +195,8 @@ class TelegramService {
       await c.close();
     }
     _downloadControllers.clear();
-    await _service?.stop();
-    _service = null;
+    await _client?.stop();
+    _client = null;
     _emit(TelegramAuthState.idle);
   }
 
@@ -269,13 +281,13 @@ class TelegramService {
   /// [lastError] en cas d'échec, pour que l'UI affiche le motif exact renvoyé
   /// par Telegram (« PHONE_CODE_INVALID », « PASSWORD_HASH_INVALID »…).
   Future<bool> _call(Map<String, dynamic> request) async {
-    final service = _service;
-    if (service == null) {
+    final client = _client;
+    if (client == null) {
       lastError = 'TDLib non démarré';
       return false;
     }
     try {
-      await service.sendSync(request);
+      await client.send(request);
       lastError = '';
       return true;
     } catch (e) {
@@ -287,7 +299,7 @@ class TelegramService {
 
   /// Traduit les codes d'erreur Telegram les plus fréquents.
   static String _readableError(Object e) {
-    final raw = e is td.Error ? e.message : '$e';
+    final raw = e is TdlibException ? e.message : '$e';
     switch (raw) {
       case 'PHONE_NUMBER_INVALID':
         return 'Numéro de téléphone invalide.';
@@ -317,13 +329,13 @@ class TelegramService {
 
   /// Requête typée ; retourne null et remplit [lastError] en cas d'échec.
   Future<Map<String, dynamic>?> request(Map<String, dynamic> req) async {
-    final service = _service;
-    if (service == null) {
+    final client = _client;
+    if (client == null) {
       lastError = 'TDLib non démarré';
       return null;
     }
     try {
-      final r = await service.sendSync(req);
+      final r = await client.send(req);
       lastError = '';
       return r;
     } catch (e) {

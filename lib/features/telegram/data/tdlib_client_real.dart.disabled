@@ -1,0 +1,88 @@
+/// Frontière entre la fonctionnalité Telegram et la bibliothèque native TDLib.
+///
+/// ⚠️ IMPLÉMENTATION RÉELLE — INACTIVE tant que ce fichier porte l'extension
+/// `.disabled` (l'analyseur Dart ignore tout ce qui ne finit pas par `.dart`).
+///
+/// Pour l'activer, voir le mode d'emploi en tête de `tdlib_client.dart`.
+///
+/// Rappel du choix d'architecture : TDLib tourne DANS l'app, sans serveur.
+/// L'API Bot était exclue — `getFile` y plafonne les téléchargements à 20 Mo
+/// alors qu'un film pèse plusieurs Go. TDLib parle MTProto et lit un fichier
+/// par offset, ce qui permet la lecture progressive. En contrepartie, chaque
+/// utilisateur se connecte avec SON compte : les fichiers transitent du CDN
+/// Telegram directement vers l'appareil, sans bande passante à notre charge.
+library;
+
+import 'package:flutter/foundation.dart';
+import 'package:libtdjson/libtdjson.dart' as td;
+
+/// Vrai quand la bibliothèque native est embarquée dans ce build.
+const bool tdlibAvailable = true;
+
+/// Erreur remontée par TDLib, normalisée pour que le service ne dépende pas
+/// du type d'exception d'un paquet tiers.
+class TdlibException implements Exception {
+  final String message;
+
+  const TdlibException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+/// Reçoit chaque objet poussé par TDLib (updates et réponses).
+typedef TdlibUpdateHandler = void Function(Map<String, dynamic> update);
+
+/// Ce que le service attend de TDLib, et rien de plus.
+abstract interface class TdlibClient {
+  /// Envoie une requête et attend sa réponse corrélée.
+  /// Lève [TdlibException] si Telegram renvoie une erreur.
+  Future<Map<String, dynamic>> send(Map<String, dynamic> request);
+
+  /// Arrête la boucle de réception et libère le client natif.
+  Future<void> stop();
+}
+
+/// Implémentation au-dessus de `libtdjson`.
+///
+/// Le paquet fournit déjà la partie délicate : boucle `receive` dans un
+/// isolate (sans quoi l'UI gèlerait, `td_json_client_receive` étant bloquant),
+/// corrélation `@extra` → Future, et envoi automatique de `setTdlibParameters`
+/// quand TDLib le réclame.
+class _LibTdJsonClient implements TdlibClient {
+  final td.Service _service;
+
+  _LibTdJsonClient(this._service);
+
+  @override
+  Future<Map<String, dynamic>> send(Map<String, dynamic> request) async {
+    try {
+      return await _service.sendSync(request);
+    } on td.Error catch (e) {
+      throw TdlibException(e.message);
+    }
+  }
+
+  @override
+  Future<void> stop() => _service.stop();
+}
+
+/// Crée un client TDLib, ou retourne null si la bibliothèque n'est pas
+/// embarquée dans ce build.
+///
+/// [parameters] est passé tel quel à `setTdlibParameters`.
+TdlibClient? createTdlibClient({
+  required Map<String, dynamic> parameters,
+  required TdlibUpdateHandler onUpdate,
+}) {
+  final service = td.Service(
+    // Verbosité 1 = erreurs seulement. TDLib est très bavard par défaut et
+    // noierait les logs de l'app.
+    newVerbosityLevel: 1,
+    tdlibParameters: parameters,
+    afterReceive: onUpdate,
+    onReceiveError: (e) => debugPrint('[TG] erreur: ${e.message}'),
+    onStreamError: (e) => debugPrint('[TG] flux: $e'),
+  );
+  return _LibTdJsonClient(service);
+}

@@ -187,6 +187,15 @@ class _TelegramSetupSheetState extends State<TelegramSetupSheet> {
   }
 
   _Step _stepFor(TelegramProvider tg) {
+    if (!tg.isAvailable) {
+      return const _Step(
+        explanation: "La lecture depuis Telegram n'est pas incluse dans cette "
+            "version de l'app. Elle nécessite une bibliothèque native qui "
+            'alourdit le build ; elle sera activée quand la section films et '
+            'séries deviendra utile.',
+        action: 'Fermer',
+      );
+    }
     if (!tg.isConfigured) {
       return const _Step(
         explanation:

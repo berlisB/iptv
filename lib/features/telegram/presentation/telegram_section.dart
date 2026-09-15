@@ -82,6 +82,16 @@ class _Gate extends StatelessWidget {
   }
 
   static (String, String?) _stateOf(TelegramProvider tg) {
+    // Distinguer « fonctionnalité absente du build » de « mal configurée » :
+    // sans ça, l'utilisateur croit à une erreur de sa part et cherche des
+    // identifiants qui ne changeraient rien.
+    if (!tg.isAvailable) {
+      return (
+        'La lecture depuis Telegram n\'est pas incluse dans cette version de '
+            "l'app.",
+        null,
+      );
+    }
     if (!tg.isConfigured) {
       return (
         "Cette version de l'app n'a pas été compilée avec des identifiants "

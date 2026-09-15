@@ -51,6 +51,9 @@ class TelegramProvider extends ChangeNotifier {
   // --- Getters ---
   TelegramAuthState get authState => _authState;
   bool get isConfigured => TelegramService.isConfigured;
+
+  /// La bibliothèque native TDLib est-elle embarquée dans ce build ?
+  bool get isAvailable => TelegramService.isAvailable;
   bool get isReady => _authState == TelegramAuthState.ready;
   bool get hasChannel => _chatId != 0;
   String get channel => _channel;
