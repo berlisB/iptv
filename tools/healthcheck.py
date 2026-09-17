@@ -223,11 +223,18 @@ NAME_KEYWORDS = [
       "gym", "darts", "billiard", "snooker", "bein", "dazn", "eurosport",
       "formula", "f1 ", "nascar", "motogp", "rally", "esport", "gaming"),
      "Sport"),
+    # ⚠️ Ne JAMAIS remettre "24/7 " ni " 24" ici. Ils visaient France 24, mais
+    # iptv-org suffixe ses chaînes d'un marqueur de disponibilité « [Not 24/7] »
+    # qui n'a rien à voir avec l'information : ces deux mots-clés envoyaient
+    # 465 chaînes quelconques dans Actualités. Les vraies chaînes « 24 » sont
+    # nommées explicitement ci-dessous.
     (("news", "info", "noticias", "nachrichten", "notizie", "nieuws",
-      "nyheter", "24/7 ", " 24", "actu", "journal", "press", "report",
+      "nyheter", "actu", "journal", "press", "report",
       "bulletin", "weather", "meteo", "météo", "politic", "parliament",
       "senate", "congress", "cnn", "bbc news", "sky news", "msnbc",
-      "fox news", "newsmax", "bloomberg", "cnbc", "reuters", "afp"),
+      "fox news", "newsmax", "bloomberg", "cnbc", "reuters", "afp",
+      "france 24", "france24", "i24", "rai news", "tv24", "24 news",
+      "news 24", "kanal 24", "canal 24"),
      "Actualités"),
     (("kids", "junior", "cartoon", "toon", "baby", "teen", "nick",
       "disney", "boomerang", "pokemon", "peppa", "barbie", "lego",
@@ -274,6 +281,12 @@ _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 # Affilié local américain : « Very Alabama by WVTM », « Denver News by KMGH ».
 # Les indicatifs FCC commencent tous par W (est du Mississippi) ou K (ouest).
 _US_AFFILIATE_RE = re.compile(r"\bby [WK][A-Z]{2,3}\b")
+
+# Marqueurs techniques accolés au nom par iptv-org : « (1080p) », « [Not 24/7] »,
+# « [Geo-blocked] ». Ils décrivent le FLUX, pas le contenu, et empoisonnaient la
+# recherche par mots-clés — « [Not 24/7] » suffisait à faire d'une chaîne
+# quelconque une chaîne d'information.
+_NAME_MARKER_RE = re.compile(r"[\[(][^\])]*[\])]")
 
 _EXTINF_ATTRS = {
     "tvg_id": re.compile(r'tvg-id="([^"]*)"'),
@@ -397,8 +410,8 @@ def classify(meta, index=None):
     if tvg_id.startswith("LN_") or _US_AFFILIATE_RE.search(meta["name"]):
         return country or "US", "Actualités"
 
-    # 5. mots-clés du nom.
-    padded = f" {name} "
+    # 5. mots-clés du nom, marqueurs de flux retirés au préalable.
+    padded = f" {_NAME_MARKER_RE.sub(' ', name)} "
     for keywords, cat in NAME_KEYWORDS:
         if any(kw in padded for kw in keywords):
             return country, cat
